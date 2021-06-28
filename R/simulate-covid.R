@@ -4,7 +4,7 @@ library(data.table)
 
 simulate_covid <- function(
   # epidemiology
-  r0 = 3 * 1.5, # r0 = 3; plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
+  r0 = 4.5, # r0 = 3; plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
   # vaccination settings
   vaccination_levels = c(
     under12 = 0.00,
@@ -15,7 +15,7 @@ simulate_covid <- function(
     over80  = 0.95),
   uniform_vaccination_rate = NULL,
   weekly_vaccinations = 0.01,            # additional % of the population vaccinated each week
-  max_vaccination_rate = 0.95,
+  p_max_vaccinated = 0.95,
 
   # epidemiology of vaccinated people
   vac_infection_rate = 0.2,
@@ -27,8 +27,8 @@ simulate_covid <- function(
 
   # population settings
 
-  population_scale_factor = population_scale_factor, # 1=26m, 10=2.6m, 100=260k population
-  n_start_infected = 1,
+  population_scale_factor = 10, # 1=26m, 10=2.6m, 100=260k population, etc
+  n_start_infected = 100,
   p_max_infected = 0.8, # proportion who CAN get infected if it spreads; kinda like herd immunity level
   n_iterations =  3,
   simulations = 1,
@@ -49,47 +49,108 @@ simulate_covid <- function(
                               scale_factor = population_scale_factor) %>%
             as.data.table()
 
-    # starting vaccination levels
-    aus <-  aus %>%
-     .[, is_vaccinated := runif(.N) <= .get_vaccination_level(age, vaccination_levels, uniform = uniform_vaccination_rate)] %>%
      .[is_vaccinated == TRUE, is_infected := FALSE] %>%
-     .[is_vaccinated == FALSE, is_infected := .sample_fixed_TRUE(.N, n_start_infected)] %>%
-     .[, newly_infected := is_infected]
+    n_population <- nrow(aus)
 
+    # vaccinate (some of) the nation
+    aus <- aus[,
+               is_vaccinated := runif(.N) <= .get_vaccination_level(age,
+                                                                    vaccination_levels,
+                                                                    uniform = uniform_vaccination_rate)]
 
-    # starting conditions
+    p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
+
+    p_infected_vaccinated_start <- p_start_vaccinated / 5
+    p_infected_unvaccinated_start <- (1 - p_infected_vaccinated_start)
+
+    # starting vaccination levels
+    n_start_infected_vaccinated <- round(p_infected_vaccinated_start * n_start_infected)
+    n_start_infected_unvaccinated <- round(p_infected_unvaccinated_start * n_start_infected)
+
+    # vaccinate
+    aus[, is_infected := FALSE] %>%
+      .[is_vaccinated == TRUE,
+        is_infected := .sample_fixed_TRUE(.N, n_start_infected_vaccinated)] %>%
+      .[is_vaccinated == FALSE,
+       is_infected := .sample_fixed_TRUE(.N, n_start_infected_unvaccinated)] %>%
+      .[, newly_infected := is_infected]
+
+    # add vars
+    aus[, is_hosp := FALSE] %>%
+      .[, is_dead := FALSE] %>%
+      .[, vaccinated_after_infection := FALSE]
+
+    # record starting conditions
     start_conditions <- tibble(
       iteration = 0L,
       new_cases = n_start_infected,
       new_hosp  = 0,
       new_dead  = 0,
-      new_vaccinated = aus[, sum(is_vaccinated)])
+      new_vaccinated = round(p_start_vaccinated * n_population))
 
     # loop over iterations
     for (t in seq_len(n_iterations)) {
 
-      # at start of day, how many infected:
+      print(t)
+
+      # *at start of day*
+
+      # how many new vaccinated
+      current_vac_rate <- aus[, sum(is_vaccinated)] / n_population
+      message("Current vaccination rate: ", round(current_vac_rate, 3))
+
+      vaccinate_more <- current_vac_rate < p_max_vaccinated
+
+      if (vaccinate_more) {
+        # ADD SOME DECAYING FUNCTION FOR THIS:
+        iteration_vaccinations <- round(weekly_vaccinations / 7 * serial_interval * n_population)
+
+        aus[, newly_vaccinated := FALSE] %>%
+          .[is_vaccinated == FALSE & is_dead == FALSE,
+            newly_vaccinated := .sample_fixed_TRUE(.N, iteration_vaccinations)]
+
+        # is the vaccination happening AFTER a person has already been infected?
+        aus[is_infected == TRUE & newly_vaccinated == TRUE,
+            vaccinated_after_infection := TRUE]
+
+        # convert to an vaccination (ie: these are vaccines administered 14 days ago)
+        aus[newly_vaccinated == TRUE,
+            is_vaccinated := TRUE]
+
+        }
+
+      # how many new infected:
       n_infected_and_vaccinated <- aus[, sum(newly_infected & is_vaccinated)]
       n_infected_and_unvaccinated <- aus[, sum(newly_infected & !is_vaccinated)]
 
       # Number of infected due to transmission and r0 but not infection
-      n_maybed_infected <- n_infected_and_vaccinated * r0 * vac_transmission_rate +
+      n_maybe_infected <- n_infected_and_vaccinated * r0 * vac_transmission_rate +
                            n_infected_and_unvaccinated * r0
-      n_maybed_infected <- as.integer(n_maybed_infected)
+      n_maybe_infected <- as.integer(n_maybe_infected)
+
+      print(n_maybe_infected)
 
       # put new people in contact with covid:
       aus[, maybe_infected := FALSE] %>%
-        .[newly_infected == FALSE, maybe_infected := .sample_fixed_TRUE(.N, n_maybed_infected)]
+        .[, maybe_infected := .sample_fixed_TRUE(.N, n_maybe_infected)]
 
       # Now if a person is vaccinated they are only infected if they have a
       # random number at least as unlikely as the infection rate
-      aus[, newly_infected := FALSE] %>% # reset newly infected counter
+      aus[,
+          newly_infected := FALSE] # reset newly infected
+
         # if maybe infected: zero chance if previously infected; lower chance if vaccinated
-        .[maybe_infected == TRUE,
+      aus[,
           newly_infected := fcase(
-            is_vaccinated == TRUE, runif(.N) <= vac_infection_rate,
-            is_infected == TRUE, FALSE,
-            is_vaccinated == FALSE & is_infected == FALSE, TRUE)] %>%
+            maybe_infected == TRUE & is_vaccinated == TRUE,
+              runif(.N) <= vac_infection_rate,
+            maybe_infected == TRUE & is_infected == TRUE,
+              FALSE,
+            maybe_infected == TRUE & !is_vaccinated & !is_infected,
+              TRUE,
+            maybe_infected == FALSE,
+              FALSE
+            )] %>%
         .[, is_infected := newly_infected | is_infected]
 
       # Of the people who become infected, who requires hospitalisation, and
@@ -99,13 +160,14 @@ simulate_covid <- function(
         .[newly_infected == TRUE,
           is_dead := runif(.N) < covid_age_death_prob(age, vaccinated = is_vaccinated)]
 
-      # generate summary of new cases
-      newly <- aus[newly_infected == TRUE]
 
+      # generate summary of new cases ---
+      newly <- aus[newly_infected == TRUE]
       add_cases <- tibble(iteration = t,
                           new_cases = newly[, .N],
                           new_hosp  = newly[, sum(is_hosp)],
                           new_dead  = newly[, sum(is_dead)],
+                          new_vaccinated  = iteration_vaccinations
                           )
 
       if (t == 1) {
@@ -118,12 +180,15 @@ simulate_covid <- function(
 
     } # end day loop
 
-    if (return_population) return(aus)
+    if (return_population) {
+      return(aus)
+    }
 
     # return all cases summary
     all_cases %>%
       mutate(runid = as.integer(runid),
-             population_vaccination_rate = population_vaccination_rate) %>%
+             population = n_population
+             ) %>%
       return()
 
 
@@ -141,7 +206,8 @@ simulate_covid <- function(
            scenario = scenario) %>%
     relocate(scenario, runid, iteration, day) %>%
     mutate(r0 = r0,
-           population_vaccination_rate = population_vaccination_rate,
+           # population_vaccination_rate = population_vaccination_rate,
+           p_max_infected = p_max_infected,
            vaccination_levels = list(vaccination_levels),
            vac_infection_rate = vac_infection_rate,
            vac_transmission_rate = vac_transmission_rate)
