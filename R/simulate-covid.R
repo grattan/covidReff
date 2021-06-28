@@ -129,6 +129,9 @@ simulate_covid <- function(
 
     zero_count <- 0
 
+    iteration_vaccinations <- round(weekly_vaccinations / 7 * serial_interval * n_population)
+    # - should add some decaying function for this
+
     # loop over iterations
     for (t in seq_len(n_iterations)) {
 
@@ -143,8 +146,6 @@ simulate_covid <- function(
       vaccinate_more <- current_vac_rate < p_max_vaccinated
 
       if (vaccinate_more) {
-        # ADD SOME DECAYING FUNCTION FOR THIS:
-        iteration_vaccinations <- round(weekly_vaccinations / 7 * serial_interval * n_population)
 
         aus[, newly_vaccinated := FALSE] %>%
           .[is_vaccinated == FALSE & is_dead == FALSE,
