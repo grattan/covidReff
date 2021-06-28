@@ -20,7 +20,7 @@ covid_age_hospitalisation_prob <- function(.age = 50, .vaccinated = FALSE,
 covid_age_death_prob <- function(age = 50,
                                  vaccinated = FALSE,
                                  .vac_death_reduction = 0.99,
-                                 .treatment_reduction = FALSE,
+                                 .treatment_improvement = TRUE,
                                  .max_death_rate = 0.28 # 90-year-old death rate as per Gideon
 ) {
 
@@ -30,7 +30,7 @@ covid_age_death_prob <- function(age = 50,
 
   ifr <- if_else(ifr > .max_death_rate, .max_death_rate, ifr)
 
-  if (.treatment_reduction) ifr <- ifr * (1 - 0.2)
+  if (.treatment_improvement) ifr <- ifr * (1 - 0.2) # assumes treatment is 20% better now
 
   ifr <- if_else(vaccinated, ifr * (1 - .vac_death_reduction), ifr)
 

@@ -1,6 +1,4 @@
 # Simulate COVID
-library(tidyverse)
-library(data.table)
 
 simulate_covid <- function(
   # epidemiology
@@ -14,8 +12,8 @@ simulate_covid <- function(
     under80 = 0.95,
     over80  = 0.95),
   uniform_vaccination_rate = NULL,
-  weekly_vaccinations = 0.01,            # additional % of the population vaccinated each week
-  p_max_vaccinated = 0.95,
+  weekly_vaccinations = 0.005,            # additional % of the population vaccinated each week
+  p_max_vaccinated = 0.90,
 
   # epidemiology of vaccinated people
   vac_infection_rate = 0.2,
@@ -87,16 +85,18 @@ simulate_covid <- function(
       new_dead  = 0,
       new_vaccinated = round(p_start_vaccinated * n_population))
 
+    zero_count <- 0
+
     # loop over iterations
     for (t in seq_len(n_iterations)) {
 
-      print(t)
+      message("Iteration:", t, "(day ", t*serial_interval, ")")
 
       # *at start of day*
 
       # how many new vaccinated
       current_vac_rate <- aus[, sum(is_vaccinated)] / n_population
-      message("Current vaccination rate: ", round(current_vac_rate, 3))
+      message("\tVaccination rate: ", round(current_vac_rate, 3))
 
       vaccinate_more <- current_vac_rate < p_max_vaccinated
 
@@ -127,7 +127,12 @@ simulate_covid <- function(
                            n_infected_and_unvaccinated * r0
       n_maybe_infected <- as.integer(n_maybe_infected)
 
-      print(n_maybe_infected)
+      message("\tMaybe infected: ", n_maybe_infected)
+
+      if (n_maybe_infected == 0) {
+        zero_count <- zero_count + 1
+        if (zero_count == 3) break else next
+      }
 
       # put new people in contact with covid:
       aus[, maybe_infected := FALSE] %>%
@@ -177,6 +182,10 @@ simulate_covid <- function(
           bind_rows(add_cases)
       }
 
+      tot_inf <- sum(all_cases$new_cases)
+
+      message("\tTotal infected: ", scales::comma(tot_inf), " (", scales::percent(tot_inf/n_population, 0.1), ")")
+
     } # end day loop
 
     if (return_population) {
@@ -205,24 +214,26 @@ simulate_covid <- function(
            scenario = scenario) %>%
     relocate(scenario, runid, iteration, day) %>%
     mutate(r0 = r0,
-           # population_vaccination_rate = population_vaccination_rate,
            p_max_infected = p_max_infected,
            vaccination_levels = list(vaccination_levels),
            vac_infection_rate = vac_infection_rate,
            vac_transmission_rate = vac_transmission_rate)
 
   # Print summary
-  print(summary(iterations$reff))
+  final <- iterations %>%
+    filter(iteration == max(iteration)) %>%
+    select(-iteration)
+
+  message("Outcomes")
+  message("\tCases:")
+  print(summary(final$total_cases))
+  message("\tDead:")
+  print(summary(final$total_dead))
 
   if (return_iterations) {
     return(iterations)
-  }
-
-  if (!return_iterations) {
-    iterations %>%
-      filter(iteration == max(iteration)) %>%
-      select(-iteraction) %>%
-      return()
+  } else {
+    return(final)
   }
 
 }
