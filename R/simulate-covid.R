@@ -2,8 +2,6 @@
 library(tidyverse)
 library(data.table)
 
-
-
 simulate_covid <- function(
   # epidemiology
   r0 = 3 * 1.5, # r0 = 3; plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
@@ -28,23 +26,27 @@ simulate_covid <- function(
   max_hospitalisation_rate = 0.95,
 
   # population settings
+
+  population_scale_factor = population_scale_factor, # 1=26m, 10=2.6m, 100=260k population
   n_start_infected = 1,
   p_max_infected = 0.8, # proportion who CAN get infected if it spreads; kinda like herd immunity level
   n_iterations =  3,
   simulations = 1,
   scenario = 1,
-  scale_factor = 10, # 1=26m, 10=2.6m, 100=260k population
   return_iterations = TRUE, # otherwise provide a summary
   return_population = FALSE # full population summary
 ) {
 
-  serial_interval = 3.5 # days; https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf
+  # internal settings:
+  serial_interval <- 3.5 # days; https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf
 
-  # function to estimate the Reff once:
+
+  # function to estimate the Reff once (split this out)
   simulate_covid_run <- function(runid) {
 
     # Get Australia
-    aus <- .read_demographics(uncounted = TRUE, scale_factor = scale_factor) %>%
+    aus <- .read_demographics(uncounted = TRUE,
+                              scale_factor = population_scale_factor) %>%
             as.data.table()
 
     # starting vaccination levels
