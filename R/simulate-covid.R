@@ -49,7 +49,6 @@ simulate_covid <- function(
                               scale_factor = population_scale_factor) %>%
             as.data.table()
 
-     .[is_vaccinated == TRUE, is_infected := FALSE] %>%
     n_population <- nrow(aus)
 
     # vaccinate (some of) the nation
