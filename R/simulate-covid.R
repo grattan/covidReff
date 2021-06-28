@@ -1,4 +1,47 @@
-# Simulate COVID
+#
+#' Simulate COVID
+#'
+#' @name simulate_covid
+#'
+#' @description simulate covid for a given reproduction number, level of
+#' vaccinations in a population, and other epidemiological params.
+#'
+#' @param r0 base reproduction number. Defaults to 3 plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
+#' @param vaccination_levels vaccination_levels by age; provided in a named vector.
+#' @param uniform_vaccination_rate  defaults  to NULL.
+#' @param weekly_vaccinations defaults to  0.005. The additional % of the population vaccinated each week
+#' @param p_max_vaccinated  defaults to 0.90.
+#' @param vac_infection_rate defaults to 0.2.
+#' @param vac_transmission_rate defaults to 0.5.
+#' @param vac_hospitalisation_reduction defaults to 0.95. The hospitalisation reduction when vaccinated GIVEN infection
+#' @param vac_death_reduction defaults to 0.99. The death reduction when vaccinated GIVEN infection
+#' @param hospitalisation_per_death defaults to 20.
+#' @param max_hospitalisation_rate defaults to 0.95.
+#' @param population_scale_factor defaults to 10, where values of 1 implies 26m  population; 10=2.6m, 100=260k population, etc
+#' @param n_start_infected defaults to 100 people infected at day 0.
+#' @param p_max_infected defaults to 0.8. The proportion who CAN get infected if it spreads; kinda like herd immunity level
+#' @param n_iterations defaults to  3.
+#' @param simulations defaults to  1.
+#' @param scenario defaults to 1.
+#' @param return_iterations defaults to TRUE
+#' @param return_population defaults to FALSE
+#'
+#' @return A \code{tibble} object.
+#'
+#' @import dplyr
+#' @import readr
+#' @import purrr
+#' @importFrom tidyr uncount
+#' @importFrom stats runif
+#' @import data.table
+#'
+#' @export
+
+
+globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
+                  "is_vaccinated", "iteration", "maybe_infected", "new_cases",
+                  "new_dead", "new_hosp", "newly_infected", "newly_vaccinated",
+                  "runid", "vaccinated_after_infection", "."))
 
 simulate_covid <- function(
   # epidemiology
@@ -24,7 +67,6 @@ simulate_covid <- function(
   max_hospitalisation_rate = 0.95,
 
   # population settings
-
   population_scale_factor = 10, # 1=26m, 10=2.6m, 100=260k population, etc
   n_start_infected = 100,
   p_max_infected = 0.8, # proportion who CAN get infected if it spreads; kinda like herd immunity level
@@ -50,10 +92,10 @@ simulate_covid <- function(
     n_population <- nrow(aus)
 
     # vaccinate (some of) the nation
-    aus <- aus[,
-               is_vaccinated := runif(.N) <= .get_vaccination_level(age,
-                                                                    vaccination_levels,
-                                                                    uniform = uniform_vaccination_rate)]
+    print(aus)
+    aus[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
+                                                               vaccination_levels,
+                                                               uniform = uniform_vaccination_rate)]
 
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
@@ -237,4 +279,3 @@ simulate_covid <- function(
   }
 
 }
-

@@ -14,4 +14,4 @@ auspop <- abs_raw %>%
   select(-gender) %>%
   mutate(age = if_else(age == "100 and over", 100, as.numeric(age)))
 
-usethis::use_data(auspop, overwrite = TRUE)
+usethis::use_data(auspop, overwrite = TRUE, internal = TRUE)

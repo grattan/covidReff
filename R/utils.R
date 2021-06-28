@@ -43,7 +43,6 @@
 .read_demographics <- function(uncounted = TRUE,
                                scale_factor = 1 # 1 is unscaled
                                ) {
-  load("data/auspop.rda")
 
   if (uncounted) {
     auspop <- auspop %>%
