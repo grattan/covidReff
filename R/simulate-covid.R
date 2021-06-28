@@ -92,7 +92,6 @@ simulate_covid <- function(
     n_population <- nrow(aus)
 
     # vaccinate (some of) the nation
-    print(aus)
     aus[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
                                                                vaccination_levels,
                                                                uniform = uniform_vaccination_rate)]
@@ -250,6 +249,7 @@ simulate_covid <- function(
     group_by(runid) %>%
     mutate(day = iteration * serial_interval,
            total_cases = cumsum(new_cases),
+           total_vaccinated = cumsum(new_vaccinated),
            total_hosp = cumsum(new_hosp),
            total_dead = cumsum(new_dead),
            rt = new_cases / lag(new_cases),
