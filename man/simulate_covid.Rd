@@ -8,9 +8,7 @@
 
 \item{serial_interval}{5 days, from https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}
 
-\item{vaccination_levels}{vaccination_levels by age; provided in a named vector.}
-
-\item{uniform_vaccination_rate}{defaults  to NULL.}
+\item{vaccination_levels}{vaccination_levels by age; provided in a named vector. If a single numeric is provided, distributed uniformly among age groups.}
 
 \item{weekly_vaccinations}{defaults to  0.005. The additional proportion of the population vaccinated each week}
 

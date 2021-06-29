@@ -6,20 +6,17 @@
 
 # vaccine rate function ------------------------------------------------------
 .get_vaccination_level <- function(age,
-                                   levels = NULL,
-                                   uniform = NULL) {
+                                   levels = NULL) {
 
-  if (!is.null(uniform)) return(uniform)
+  if (length(levels) == 1) return(levels)
 
-  if (is.null(uniform)) {
-    fcase(
+  fcase(
       age <  12, levels["under12"],
       age <  40, levels["under40"],
       age <  60, levels["under60"],
       age <  80, levels["under80"],
       age >= 80, levels["over80"]
     )
-  }
 }
 
 

@@ -8,8 +8,7 @@
 #'
 #' @param r0 base reproduction number. Defaults to 3 plus delta variant increases by 50 per cent: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
 #' @param serial_interval 5 days, from https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf
-#' @param vaccination_levels vaccination_levels by age; provided in a named vector.
-#' @param uniform_vaccination_rate  defaults  to NULL.
+#' @param vaccination_levels vaccination_levels by age; provided in a named vector. If a single numeric is provided, distributed uniformly among age groups.
 #' @param weekly_vaccinations defaults to  0.005. The additional proportion of the population vaccinated each week
 #' @param p_max_vaccinated  defaults to 0.90.
 #' @param vac_infection_rate defaults to 0.2.
@@ -54,7 +53,6 @@ simulate_covid <- function(
     under60 = 0.95,
     under80 = 0.95,
     over80  = 0.95),
-  uniform_vaccination_rate = NULL,
   weekly_vaccinations = 0.005,
   p_max_vaccinated = 0.90,
   vac_infection_rate = 0.2,
@@ -86,8 +84,7 @@ simulate_covid <- function(
 
     # vaccinate (some of) the nation
     aus[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
-                                                               vaccination_levels,
-                                                               uniform = uniform_vaccination_rate)]
+                                                               vaccination_levels)]
 
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
