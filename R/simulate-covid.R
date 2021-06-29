@@ -6,11 +6,11 @@
 #' @description simulate covid for a given reproduction number, level of
 #' vaccinations in a population, and other epidemiological params.
 #'
-#' @param r0 base reproduction number. Defaults to 3 plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
+#' @param r0 base reproduction number. Defaults to 3 plus delta variant increases by 50 per cent: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
 #' @param serial_interval 5 days, from https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf
 #' @param vaccination_levels vaccination_levels by age; provided in a named vector.
 #' @param uniform_vaccination_rate  defaults  to NULL.
-#' @param weekly_vaccinations defaults to  0.005. The additional % of the population vaccinated each week
+#' @param weekly_vaccinations defaults to  0.005. The additional proportion of the population vaccinated each week
 #' @param p_max_vaccinated  defaults to 0.90.
 #' @param vac_infection_rate defaults to 0.2.
 #' @param vac_transmission_rate defaults to 0.5.
@@ -46,10 +46,8 @@ globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
                   "runid", "vaccinated_after_infection", "."))
 
 simulate_covid <- function(
-  # epidemiology
-  r0 = 4.5, # r0 = 3; plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
+  r0 = 4.5,
   serial_interval = 5,
-  # vaccination settings
   vaccination_levels = c(
     under12 = 0.00,
     under40 = 0.70,
@@ -57,26 +55,22 @@ simulate_covid <- function(
     under80 = 0.95,
     over80  = 0.95),
   uniform_vaccination_rate = NULL,
-  weekly_vaccinations = 0.005,            # additional % of the population vaccinated each week
+  weekly_vaccinations = 0.005,
   p_max_vaccinated = 0.90,
-
-  # epidemiology of vaccinated people
   vac_infection_rate = 0.2,
   vac_transmission_rate = 0.5,
-  vac_hospitalisation_reduction = 0.95, # Hospitalisation reduction when vaccinated GIVEN infection
-  vac_death_reduction = 0.99,           # Death reduction when vaccinated GIVEN infection
-  hospitalisation_per_death = 20,       # made this up; need to look into it
+  vac_hospitalisation_reduction = 0.95,
+  vac_death_reduction = 0.99,
+  hospitalisation_per_death = 20,
   max_hospitalisation_rate = 0.95,
-
-  # population settings
-  population_scale_factor = 10, # 1=26m, 10=2.6m, 100=260k population, etc
+  population_scale_factor = 10,
   n_start_infected = 100,
-  p_max_infected = 0.8, # proportion who CAN get infected if it spreads; kinda like herd immunity level
+  p_max_infected = 0.8,
   n_iterations =  3,
   simulations = 1,
   scenario = 1,
-  return_iterations = TRUE, # otherwise provide a summary
-  return_population = FALSE # full population summary
+  return_iterations = TRUE,
+  return_population = FALSE
 ) {
 
 

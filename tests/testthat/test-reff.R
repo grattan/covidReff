@@ -14,3 +14,23 @@ test_that("simulation works", {
                population_scale_factor = 10)
     )
 })
+
+test_that("get population rate works", {
+
+  testthat::expect_gte(
+      get_population_rate(age_rate = c(under12 = 0.00,
+                                       under40 = 0.70,
+                                       under60 = 0.90,
+                                       under80 = 0.95,
+                                       over80  = 0.95)),
+      0.7 # 0.7003302
+    )
+
+  testthat::expect_equal(
+      get_population_rate(age_rate = c(under12 = 0.7,
+                                       under40 = 0.7,
+                                       under60 = 0.7,
+                                       under80 = 0.7,
+                                       over80  = 0.7)),
+      0.7)
+})
