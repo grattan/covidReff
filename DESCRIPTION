@@ -2,7 +2,10 @@ Package: covidReff
 Type: Package
 Title: Simulate Covid
 Version: 0.1.0
-Author: Will Mackey
+Authors@R: c(person("Will", "Mackey", email = "wfmackey@gmail.com",
+                role = c("aut", "cre")),
+        person(given = "Hugh", family = "Parsonage",
+                role = c("aut")))
 Maintainer: Will Mackey <wfmackey@gmail.com>
 Description: Simulate Covid based on reproduction and vaccination inputs.
 License: MIT + file LICENSE
