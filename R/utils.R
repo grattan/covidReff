@@ -15,13 +15,13 @@
     fcase(
       age <  12, levels["under12"],
       age <  40, levels["under40"],
-      age <  50, levels["under50"],
       age <  60, levels["under60"],
       age <  80, levels["under80"],
       age >= 80, levels["over80"]
     )
   }
 }
+
 
 # helper function
 .sample_fixed_TRUE <- function(n, nTRUE) {

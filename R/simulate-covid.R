@@ -53,7 +53,6 @@ simulate_covid <- function(
   vaccination_levels = c(
     under12 = 0.00,
     under40 = 0.70,
-    under50 = 0.90,
     under60 = 0.95,
     under80 = 0.95,
     over80  = 0.95),

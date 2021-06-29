@@ -17,7 +17,8 @@ Depends:
     purrr,
     tidyr,
     data.table,
-    readr
+    readr,
+    scales
 Suggests: 
     testthat
 RoxygenNote: 7.1.1
