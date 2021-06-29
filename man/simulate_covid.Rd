@@ -6,6 +6,8 @@
 \arguments{
 \item{r0}{base reproduction number. Defaults to 3 plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf}
 
+\item{serial_interval}{5 days, from https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}
+
 \item{vaccination_levels}{vaccination_levels by age; provided in a named vector.}
 
 \item{uniform_vaccination_rate}{defaults  to NULL.}

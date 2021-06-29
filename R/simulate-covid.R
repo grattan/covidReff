@@ -7,6 +7,7 @@
 #' vaccinations in a population, and other epidemiological params.
 #'
 #' @param r0 base reproduction number. Defaults to 3 plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
+#' @param serial_interval 5 days, from https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf
 #' @param vaccination_levels vaccination_levels by age; provided in a named vector.
 #' @param uniform_vaccination_rate  defaults  to NULL.
 #' @param weekly_vaccinations defaults to  0.005. The additional % of the population vaccinated each week
@@ -32,6 +33,7 @@
 #' @import readr
 #' @import purrr
 #' @importFrom tidyr uncount
+#' @importFrom scales comma percent
 #' @importFrom stats runif
 #' @import data.table
 #'
@@ -39,13 +41,14 @@
 
 
 globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
-                  "is_vaccinated", "iteration", "maybe_infected", "new_cases",
-                  "new_dead", "new_hosp", "newly_infected", "newly_vaccinated",
+                  "is_vaccinated", "new_vaccinated", "iteration", "maybe_infected",
+                  "new_cases", "new_dead", "new_hosp", "newly_infected", "newly_vaccinated",
                   "runid", "vaccinated_after_infection", "."))
 
 simulate_covid <- function(
   # epidemiology
   r0 = 4.5, # r0 = 3; plus delta variant increases by 50%: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf
+  serial_interval = 5,
   # vaccination settings
   vaccination_levels = c(
     under12 = 0.00,
@@ -77,9 +80,6 @@ simulate_covid <- function(
   return_population = FALSE # full population summary
 ) {
 
-  # internal settings:
-  serial_interval <- 3.5 # days; https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf
-
 
   # function to estimate the Reff once (split this out)
   simulate_covid_run <- function(runid) {
@@ -98,6 +98,7 @@ simulate_covid <- function(
 
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
+    # starting infected population more likely to be unvaccinated
     p_infected_vaccinated_start <- p_start_vaccinated / 5
     p_infected_unvaccinated_start <- (1 - p_infected_vaccinated_start)
 
