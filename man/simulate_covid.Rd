@@ -30,8 +30,6 @@
 
 \item{n_start_infected}{defaults to 100 people infected at day 0.}
 
-\item{p_max_infected}{defaults to 0.8. The proportion who CAN get infected if it spreads; kinda like herd immunity level}
-
 \item{n_iterations}{defaults to  3.}
 
 \item{simulations}{defaults to  1.}

@@ -19,7 +19,6 @@
 #' @param max_hospitalisation_rate defaults to 0.95.
 #' @param population_scale_factor defaults to 10, where values of 1 implies 26m  population; 10=2.6m, 100=260k population, etc
 #' @param n_start_infected defaults to 100 people infected at day 0.
-#' @param p_max_infected defaults to 0.8. The proportion who CAN get infected if it spreads; kinda like herd immunity level
 #' @param n_iterations defaults to  3.
 #' @param simulations defaults to  1.
 #' @param scenario defaults to 1.
@@ -125,20 +124,23 @@ simulate_covid <- function(
     # loop over iterations
     for (t in seq_len(n_iterations)) {
 
-      message("Iteration:", t, "(day ", t*serial_interval, ")")
+      message("Scenario: ", scenario, "; run: ", runid)
+      message("\tIteration: ", t, " (day ", t*serial_interval, ")")
 
       # *at start of day*
 
-      # how many new vaccinated
+      # how many new vaccinated -----
       current_vac_rate <- aus[, sum(is_vaccinated)] / n_population
-      message("\tVaccination rate: ", round(current_vac_rate, 3))
+      message("\t\tVaccination rate: ", round(current_vac_rate, 3))
+
+      # reset new vaccinations
+      aus[, newly_vaccinated := FALSE]
 
       vaccinate_more <- current_vac_rate < p_max_vaccinated
 
       if (vaccinate_more) {
 
-        aus[, newly_vaccinated := FALSE] %>%
-          .[is_vaccinated == FALSE & is_dead == FALSE,
+        aus[is_vaccinated == FALSE & is_dead == FALSE,
             newly_vaccinated := .sample_fixed_TRUE(.N, iteration_vaccinations)]
 
         # is the vaccination happening AFTER a person has already been infected?
@@ -160,7 +162,7 @@ simulate_covid <- function(
                            n_infected_and_unvaccinated * r0
       n_maybe_infected <- as.integer(n_maybe_infected)
 
-      message("\tMaybe infected: ", n_maybe_infected)
+      message("\t\tMaybe infected: ", n_maybe_infected)
 
       if (n_maybe_infected == 0) {
         zero_count <- zero_count + 1
@@ -204,7 +206,7 @@ simulate_covid <- function(
                           new_cases = newly[, .N],
                           new_hosp  = newly[, sum(is_hosp)],
                           new_dead  = newly[, sum(is_dead)],
-                          new_vaccinated  = iteration_vaccinations
+                          new_vaccinated  = aus[, sum(newly_vaccinated)]
                           )
 
       if (t == 1) {
@@ -248,7 +250,6 @@ simulate_covid <- function(
            scenario = scenario) %>%
     relocate(scenario, runid, iteration, day) %>%
     mutate(r0 = r0,
-           p_max_infected = p_max_infected,
            vaccination_levels = list(vaccination_levels),
            vac_infection_rate = vac_infection_rate,
            vac_transmission_rate = vac_transmission_rate)
