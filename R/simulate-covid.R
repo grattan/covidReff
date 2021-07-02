@@ -173,10 +173,9 @@ simulate_covid <- function(
       aus[, maybe_infected := FALSE] %>%
         .[, maybe_infected := .sample_fixed_TRUE(.N, n_maybe_infected)]
 
-      # Now if a person is vaccinated they are only infected if they have a
-      # random number at least as unlikely as the infection rate
+      # reset newly infected
       aus[,
-          newly_infected := FALSE] # reset newly infected
+          newly_infected := FALSE]
 
         # if maybe infected: zero chance if previously infected; lower chance if vaccinated
       aus[,
