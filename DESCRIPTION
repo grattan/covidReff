@@ -11,12 +11,14 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: 
-    R (>= 3.10),
+    R (>= 3.10)
+Imports:
     dplyr,
     purrr,
     tidyr,
     data.table,
-    readr,
+    magrittr,
+    tibble,
     scales
 Suggests: 
     testthat
