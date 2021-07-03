@@ -27,13 +27,6 @@
 #'
 #' @return A \code{tibble} object.
 #'
-#' @import dplyr
-#' @import readr
-#' @import purrr
-#' @importFrom tidyr uncount
-#' @importFrom scales comma percent
-#' @importFrom stats runif
-#' @import data.table
 #'
 #' @export
 
