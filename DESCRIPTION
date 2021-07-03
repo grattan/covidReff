@@ -6,7 +6,6 @@ Authors@R: c(person("Will", "Mackey", email = "wfmackey@gmail.com",
                 role = c("aut", "cre")),
         person(given = "Hugh", family = "Parsonage",
                 role = c("aut")))
-Maintainer: Will Mackey <wfmackey@gmail.com>
 Description: Simulate Covid based on reproduction and vaccination inputs.
 License: MIT + file LICENSE
 Encoding: UTF-8
