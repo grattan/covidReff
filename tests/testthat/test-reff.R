@@ -8,7 +8,7 @@ zero_vac_sim_R5 <- simulate_covid(
   vac_infection_reduction = 0.8,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
-  population_scale_factor = 1000
+  n_population = 26000
   )
 
 high_vac_sim_R5 <- simulate_covid(
@@ -19,14 +19,14 @@ high_vac_sim_R5 <- simulate_covid(
   vac_infection_reduction = 0.8,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
-  population_scale_factor = 1000
+  n_population = 26000
   )
 
 
 stagger <- simulate_covid(
   R = 5,
   n_iterations = 2,
-  population_scale_factor = 10000,
+  n_population = 2600,
   run_simulations = 5,
   stagger_simulations = 7
 )

@@ -29,7 +29,7 @@ A shorter \code{serial_interval} will speed up the virus spread.}
 
 \item{treatment_death_reduction}{The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.}
 
-\item{population_scale_factor}{Scales down the Australian population (about 26 million) by this factor. A single numeric, defaulting to 10. Values of 1 implies 26m population; 10 = 2.6m, 100 = 260k, etc}
+\item{n_population}{Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).}
 
 \item{n_start_infected}{The number of people infected at the beginning of the simulation. Defaults to 100 people infected at day 0.}
 
@@ -59,7 +59,7 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
 \item{\code{reff}}{The overall effective reproduction number. Derived from sum of all new cases, number of cases initially, and the number of iterations with: \code{(total_cases / initial_cases)^(1/iterations) - 1}.}
-\item{\code{in_population}}{Input population in the simulation, equal to the Australian population / \code{population_scale_factor}.}
+\item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 \item{\code{in_R}}{Input \code{R} value.}
 \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
 \item{\code{in_vac_infection_reduction}}{Input \code{vac_infection_reduction}.}

@@ -19,7 +19,7 @@
 #' @param hospitalisation_per_death Average number of hospitalisations for each death that occurs. A single numeric with default 20.
 #' @param death_rate The likelihood that an infected person dies. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
 #' @param treatment_death_reduction The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.
-#' @param population_scale_factor Scales down the Australian population (about 26 million) by this factor. A single numeric, defaulting to 10. Values of 1 implies 26m population; 10 = 2.6m, 100 = 260k, etc
+#' @param n_population Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).
 #' @param n_start_infected The number of people infected at the beginning of the simulation. Defaults to 100 people infected at day 0.
 #' @param n_iterations Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.
 #' @param run_simulations The number of times the simulation is run. A single integer defaulting to  1L.
@@ -43,7 +43,7 @@
 #' \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 #' \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
 #' \item{\code{reff}}{The overall effective reproduction number. Derived from sum of all new cases, number of cases initially, and the number of iterations with: \code{(total_cases / initial_cases)^(1/iterations) - 1}.}
-#' \item{\code{in_population}}{Input population in the simulation, equal to the Australian population / \code{population_scale_factor}.}
+#' \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 #' \item{\code{in_R}}{Input \code{R} value.}
 #' \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
 #' \item{\code{in_vac_infection_reduction}}{Input \code{vac_infection_reduction}.}
@@ -83,7 +83,7 @@ simulate_covid <- function(
   hospitalisation_per_death = 20,
   death_rate = "loglinear",
   treatment_death_reduction = 0.2,
-  population_scale_factor = 10,
+  n_population = 2.6e6,
   n_start_infected = 100,
   p_max_infected = 0.8,
   n_iterations =  3,
@@ -101,7 +101,7 @@ simulate_covid <- function(
 
   # get Australia population
   base_aus <- .read_demographics(uncounted = TRUE,
-                            scale_factor = population_scale_factor) %>%
+                                 n_pop = n_population) %>%
     as.data.table()
 
   # function to estimate the Reff once (split this out)
