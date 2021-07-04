@@ -99,19 +99,21 @@ simulate_covid <- function(
   vac_transmission_rate <- 1 - vac_transmission_reduction
 
 
+  # get Australia population
+  base_aus <- .read_demographics(uncounted = TRUE,
+                            scale_factor = population_scale_factor) %>%
+    as.data.table()
+
   # function to estimate the Reff once (split this out)
   simulate_covid_run <- function(runid) {
 
-    # Get Australia
-    aus <- .read_demographics(uncounted = TRUE,
-                              scale_factor = population_scale_factor) %>%
-            as.data.table()
+    aus <- base_aus
 
     n_population <- nrow(aus)
 
     # vaccinate (some of) the nation
-    aus[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
-                                                               vaccination_levels)]
+      aus[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
+                                                                 vaccination_levels)]
 
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
