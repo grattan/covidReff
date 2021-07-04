@@ -8,14 +8,23 @@
 .get_vaccination_level <- function(age,
                                    levels = NULL) {
 
+  if (length(levels) != 1 & length(levels) != 10) {
+    stop("Vaccination levels must be either a vector of length 1 or 10")
+  }
+
   if (length(levels) == 1) return(levels)
 
   fcase(
-      age <  12, levels["under12"],
-      age <  40, levels["under40"],
-      age <  60, levels["under60"],
-      age <  80, levels["under80"],
-      age >= 80, levels["over80"]
+      age <=  10, levels[1],
+      age <=  20, levels[2],
+      age <=  30, levels[3],
+      age <=  40, levels[4],
+      age <=  50, levels[5],
+      age <=  60, levels[6],
+      age <=  70, levels[7],
+      age <=  80, levels[8],
+      age <=  90, levels[9],
+      age >   90, levels[10]
     )
 }
 

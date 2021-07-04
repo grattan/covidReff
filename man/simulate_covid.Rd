@@ -4,46 +4,66 @@
 \alias{simulate_covid}
 \title{Simulate COVID}
 \arguments{
-\item{r0}{base reproduction number. Defaults to 3 plus delta variant increases by 50 per cent: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf}
+\item{R}{The average number of additional people an infected person will infect in an unvaccinated society. It incorporates both the R0 of the variant and behaviours and policies may reduce alter transmission. A single numeric with default 4.5 to represent the Delta variant in a low-restriction society. See \href{https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf}{Kucharski et al (2021)}.}
 
-\item{serial_interval}{5 days, from https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}
+\item{serial_interval}{The average number of days between a person becoming infected and infecting others. A single numeric with default of 5, appropriate for wild type/Delta variant: \href{https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}{Pung et al (2021)}).
+A shorter \code{serial_interval} will speed up the virus spread.}
 
-\item{vaccination_levels}{vaccination_levels by age; provided in a named vector. If a single numeric is provided, distributed uniformly among age groups.}
+\item{vaccination_levels}{Starting vaccination levels. Either a single numeric for a unifromly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}}
 
-\item{weekly_vaccinations}{defaults to  0.005. The additional proportion of the population vaccinated each week}
+\item{weekly_vaccinations}{The additional proportion of the population vaccinated per 7 days. A single numeric with default 0.005. The additional proportion of the population vaccinated each week}
 
-\item{p_max_vaccinated}{defaults to 0.90.}
+\item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90.}
 
-\item{vac_infection_rate}{defaults to 0.2.}
+\item{vac_infection_reduction}{The reduction in the likelihood of infection relative to an unvaccinated person. A single numeric with default 0.8. This default represents a reduction in the probability of infection of 80 per cent.}
 
-\item{vac_transmission_rate}{defaults to 0.5.}
+\item{vac_transmission_reduction}{The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.}
 
-\item{vac_hospitalisation_reduction}{defaults to 0.95. The hospitalisation reduction when vaccinated GIVEN infection}
+\item{vac_hospitalisation_reduction}{The reduction in the likelihood, given an infection, of requiring hospitalisation for a vaccinated person. A single numeric defaulting to 0.95.}
 
-\item{vac_death_reduction}{defaults to 0.99. The death reduction when vaccinated GIVEN infection}
+\item{vac_death_reduction}{The reduction in the likelihood, given an infection, of death for a vaccinated person. A single numeric defaulting to 0.99.}
 
-\item{hospitalisation_per_death}{defaults to 20.}
+\item{hospitalisation_per_death}{Average number of hospitalisations for each death that occurs. A single numeric with default 20.}
 
-\item{max_hospitalisation_rate}{defaults to 0.95.}
+\item{death_rate}{The likelihood that an infected person dies. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.}
 
-\item{population_scale_factor}{defaults to 10, where values of 1 implies 26m  population; 10=2.6m, 100=260k population, etc}
+\item{treatment_death_reduction}{The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.}
 
-\item{n_start_infected}{defaults to 100 people infected at day 0.}
+\item{population_scale_factor}{Scales down the Australian population (about 26 million) by this factor. A single numeric, defaulting to 10. Values of 1 implies 26m population; 10 = 2.6m, 100 = 260k, etc}
 
-\item{n_iterations}{defaults to  3.}
+\item{n_start_infected}{The number of people infected at the beginning of the simulation. Defaults to 100 people infected at day 0.}
 
-\item{simulations}{defaults to  1.}
+\item{n_iterations}{Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.}
 
-\item{scenario}{defaults to 1.}
+\item{simulations}{The number of times the simulation is run. A single integer defaulting to  1L.}
 
-\item{return_iterations}{defaults to TRUE}
-
-\item{return_population}{defaults to FALSE}
+\item{scenario}{Name of the scenario. Defaults to "1". This is useful when using \code{purrr::map} or \code{lapply} over a number of scenarios.}
 }
 \value{
-A \code{tibble} object.
+A \code{tibble} object with one row per scenario, simulation and iteration. For each row, columns provide information on: 
+
+\item{\code{scenario}}{The scenario name.}
+\item{\code{runid}}{The simulation run number.}
+\item{\code{iteration}}{The iteration of the scenario simulation run.}
+\item{\code{day}}{Days since beginning of simulation, where \code{day = iteration * serial_iterval}.}
+\item{\code{new_cases_i}}{the number of new Covid cases in iteration \code{i}.}
+\item{\code{new_hosp_i}}{the number of new Covid hospitalisations in iteration \code{i}.}
+\item{\code{new_dead_i}}{the number of new Covid dead in iteration \code{i}.}
+\item{\code{new_vaccinated_i}}{the number of new people fully vaccinated in iteration \code{i}.}
+\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.} 
+\item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.} 
+\item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.} 
+\item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.} 
+\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.} 
+\item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
+\item{\code{reff}}{The overall effective reproduction number. Derived from sum of all new cases, number of cases initially, and the number of iterations with: \code{(total_cases / initial_cases)^(1/iterations) - 1}.}
+\item{\code{in_population}}{Input population in the simulation, equal to the Australian population / \code{population_scale_factor}.}
+\item{\code{in_R}}{Input \code{R} value.}
+\item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
+\item{\code{in_vac_infection_reduction}}{Input \code{vac_infection_reduction}.}
+\item{\code{in_vac_transmission_reduction}}{Input \code{vac_transmission_reduction}.}
 }
 \description{
-simulate covid for a given reproduction number, level of
+Simulate covid for a given reproduction number, level of
 vaccinations in a population, and other epidemiological params.
 }

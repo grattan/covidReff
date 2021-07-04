@@ -4,8 +4,8 @@
 \alias{get_population_rate}
 \title{Get population rate based on an age-specific input}
 \arguments{
-\item{age_rate}{a named vector with levels for 'under12', 'under40', 'under60',
-'under80', 'over80'; eg: c(under12 = 0.00, under40 = 0.70, under60 = 0.90, under80 = 0.95, over80  = 0.95)}
+\item{age_rate}{a vector of length 10 with vaccination levels for age groups: 0-10, 11-20, ..., 81-90, and 90+.
+Can be unnamed or named for clarity, eg: \code{c("0-10" = 0, "11-20" = 0.1, "21-30" = 0.2, "31-40" = 0.2, "41-50" = 0.2, "51-60" = 0.2, "61-70" = 0.2, "71-80" = 0.2, "81-90" = 0.2, "91-100" = 0.2)}}
 }
 \description{
 determine the Australian population level rate for age-specific rates
