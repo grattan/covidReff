@@ -11,6 +11,8 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+
+devtools::load_all()
 ```
 
 # covidReff
@@ -33,3 +35,24 @@ The development version from [GitHub](https://github.com/) with:
 # install.packages("remotes")
 remotes::install_github("grattan/covidReff")
 ```
+
+## Usage
+
+The `simulate_covid()` runs simulations of Covid spreading and returns a `tibble` with the results for each simulation (`runid`) on each day. Using the default settings:
+
+```{r}
+sim_results <- simulate_covid()
+sim_results
+```
+
+The key inputs for the `simulate_covid()` function are `R0` and `vaccination_levels`:
+
+```{r}
+# oh no
+oh_no <- simulate_covid(R = 8, vaccination_levels = .5)
+oh_no
+# okay!
+okay <- simulate_covid(R = 2, vaccination_levels = .9)
+okay
+```
+

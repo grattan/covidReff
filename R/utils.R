@@ -47,17 +47,21 @@
 
 
 .read_demographics <- function(uncounted = TRUE,
-                               scale_factor = 1 # 1 is unscaled
+                               n_pop = 2.6e6
                                ) {
 
+  scale_factor <- n_pop / sum(auspop$n)
+
+  ret <- auspop %>%
+    mutate(n = round(n * scale_factor))
+
+
   if (uncounted) {
-    auspop <- auspop %>%
-      count(age, wt = n) %>%
-      mutate(n = round(n / scale_factor)) %>%
+    ret <- ret %>%
       uncount() %>%
       select(age)
   }
 
-  return(auspop)
+  return(ret)
 
 }

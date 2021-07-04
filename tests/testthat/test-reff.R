@@ -3,42 +3,49 @@
 zero_vac_sim_R5 <- simulate_covid(
   R = 5,
   n_iterations = 2,
-  simulations = 1,
+  run_simulations = 1,
   vaccination_levels = 0,
   vac_infection_reduction = 0.8,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
-  population_scale_factor = 1000
+  n_population = 26000
   )
 
 high_vac_sim_R5 <- simulate_covid(
   R = 5,
   n_iterations = 2,
-  simulations = 1,
+  run_simulations = 1,
   vaccination_levels = .9,
   vac_infection_reduction = 0.8,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
-  population_scale_factor = 1000
+  n_population = 26000
   )
 
 
+stagger <- simulate_covid(
+  R = 5,
+  n_iterations = 2,
+  n_population = 2600,
+  run_simulations = 5,
+  stagger_simulations = 7
+)
+
+
 test_that("simulation returns sensible results", {
-  
-  # reff 
+
+  # reff
   expect_equal(max(zero_vac_sim_R5$rt_i, na.rm = TRUE), 5)
-
   expect_lt(high_vac_sim_R5$reff[1], 2)
-
   expect_equal(nrow(zero_vac_sim_R5), 2 + 1)
-
   expect_equal(ncol(zero_vac_sim_R5), 19)
-
   expect_equal(zero_vac_sim_R5$new_cases_i[1], 5)
-  
+})
 
 
-
+test_that("staggering works", {
+  expect_equal(stagger$day[[4]], 7)
+  expect_equal(stagger$day[[7]], 14)
 })
 
 
@@ -46,15 +53,15 @@ test_that("get population rate works", {
 
   expect_gte(
       get_population_rate(
-        age_rate = c("0-10"  = 0.00, 
-                     "11-20" = 0.20, 
-                     "21-30" = 0.40, 
-                     "31-40" = 0.50, 
-                     "41-50" = 0.60, 
-                     "51-60" = 0.70, 
-                     "61-70" = 0.90, 
-                     "71-80" = 0.90, 
-                     "81-90" = 0.95, 
+        age_rate = c("0-10"  = 0.00,
+                     "11-20" = 0.20,
+                     "21-30" = 0.40,
+                     "31-40" = 0.50,
+                     "41-50" = 0.60,
+                     "51-60" = 0.70,
+                     "61-70" = 0.90,
+                     "71-80" = 0.90,
+                     "81-90" = 0.95,
                      "91+"   = 0.95)),
       0.5 # 0.502982
     )

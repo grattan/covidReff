@@ -9,7 +9,7 @@
 \item{serial_interval}{The average number of days between a person becoming infected and infecting others. A single numeric with default of 5, appropriate for wild type/Delta variant: \href{https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}{Pung et al (2021)}).
 A shorter \code{serial_interval} will speed up the virus spread.}
 
-\item{vaccination_levels}{Starting vaccination levels. Either a single numeric for a unifromly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}}
+\item{vaccination_levels}{Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}}
 
 \item{weekly_vaccinations}{The additional proportion of the population vaccinated per 7 days. A single numeric with default 0.005. The additional proportion of the population vaccinated each week}
 
@@ -29,18 +29,20 @@ A shorter \code{serial_interval} will speed up the virus spread.}
 
 \item{treatment_death_reduction}{The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.}
 
-\item{population_scale_factor}{Scales down the Australian population (about 26 million) by this factor. A single numeric, defaulting to 10. Values of 1 implies 26m population; 10 = 2.6m, 100 = 260k, etc}
+\item{n_population}{Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).}
 
 \item{n_start_infected}{The number of people infected at the beginning of the simulation. Defaults to 100 people infected at day 0.}
 
 \item{n_iterations}{Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.}
 
-\item{simulations}{The number of times the simulation is run. A single integer defaulting to  1L.}
+\item{run_simulations}{The number of times the simulation is run. A single integer defaulting to  1L.}
+
+\item{stagger_simulations}{Sets the number of days each run in \code{run_simulations} is separated by. A single numeric defaulting to 0. A value of e.g. 7 would start the first run at day 0, the second at day 7, the third at day 14, etc. This can be used to simulate the introduction of infections to independent groups progressively over time.}
 
 \item{scenario}{Name of the scenario. Defaults to "1". This is useful when using \code{purrr::map} or \code{lapply} over a number of scenarios.}
 }
 \value{
-A \code{tibble} object with one row per scenario, simulation and iteration. For each row, columns provide information on: 
+A \code{tibble} object with one row per scenario, simulation and iteration. For each row, columns provide information on:
 
 \item{\code{scenario}}{The scenario name.}
 \item{\code{runid}}{The simulation run number.}
@@ -50,14 +52,14 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{new_hosp_i}}{the number of new Covid hospitalisations in iteration \code{i}.}
 \item{\code{new_dead_i}}{the number of new Covid dead in iteration \code{i}.}
 \item{\code{new_vaccinated_i}}{the number of new people fully vaccinated in iteration \code{i}.}
-\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.} 
-\item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.} 
-\item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.} 
-\item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.} 
-\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.} 
+\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
+\item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.}
+\item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}
+\item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.}
+\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
 \item{\code{reff}}{The overall effective reproduction number. Derived from sum of all new cases, number of cases initially, and the number of iterations with: \code{(total_cases / initial_cases)^(1/iterations) - 1}.}
-\item{\code{in_population}}{Input population in the simulation, equal to the Australian population / \code{population_scale_factor}.}
+\item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 \item{\code{in_R}}{Input \code{R} value.}
 \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
 \item{\code{in_vac_infection_reduction}}{Input \code{vac_infection_reduction}.}
