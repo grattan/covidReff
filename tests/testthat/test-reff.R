@@ -72,3 +72,26 @@ test_that("get population rate works", {
 
 })
 
+
+test_that("vaccine characteristics are as expected", {
+
+  expect_identical(
+    .get_vaccine_characteristics(vaccine_characteristics$vaccine_name,
+                                 vaccine_characteristics$after_dose,
+                                 vaccine_characteristics$varname),
+    c(0.33, 0.85, 0.50, 0.96, 0.60, 0.99, 21.00, 0.33, 0.60, 0.30, 0.92, 0.50, 0.99, 90.00)
+  )
+
+})
+
+
+test_that("death probabilities are as expected", {
+
+  expect_equal(
+    covid_age_death_prob(100, .max_death_rate = 0.28),
+    0.28
+  )
+
+})
+
+
