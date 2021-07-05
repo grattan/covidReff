@@ -55,9 +55,9 @@
 
 
 globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
-                  "is_vaccinated2", "new_vaccinated_i", "iteration", "maybe_infected",
+                  "is_vaccinated", "new_vaccinated_i", "iteration", "maybe_infected",
                   "new_cases_i", "new_dead_i", "new_hosp_i", "newly_infected", "newly_vaccinated",
-                  "runid", "vaccinated_after_infection", "."))
+                  "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose"))
 
 
 simulate_covid <- function(
@@ -91,9 +91,7 @@ simulate_covid <- function(
   n_iterations =  3,
   run_simulations = 1,
   stagger_simulations = 0,
-  scenario = 1,
-  return_iterations = TRUE,
-  return_population = FALSE
+  scenario = 1
 ) {
 
   # convert to rates
@@ -114,17 +112,20 @@ simulate_covid <- function(
     n_population <- nrow(aus)
 
     # vaccinate (some of) the nation
-      aus[,
-          is_vaccinated2 := runif(.N) <= .get_vaccination_level(age,
+    aus[, vaccine_type := factor("none",
+                                 levels = vaccine_names)] %>%
+      .[, vaccine_dose := 0] %>%
+      .[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
                                                                 vaccination_levels)] %>%
         # if vaccinated, what vaccine?
-        .[is_vaccinated2 == TRUE,
-          vaccine_type := .get_vaccination_type(age,
-                                                over60az = over60_az_share,
-                                                under60az = under60_az_share)] %>%
-        .[, is_vaccinated1 := FALSE]
+      .[is_vaccinated == TRUE,
+        vaccine_type := .get_vaccination_type(age,
+                                              over60az = over60_az_share,
+                                              under60az = under60_az_share)] %>%
+      .[is_vaccinated == TRUE,
+        vaccine_dose := 2]
 
-    p_start_vaccinated <- aus[, sum(is_vaccinated2)] / n_population
+    p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
     # starting infected population more likely to be unvaccinated
     p_infected_vaccinated_start <- p_start_vaccinated / 5
@@ -136,9 +137,9 @@ simulate_covid <- function(
 
     # infect
     aus[, is_infected := FALSE] %>%
-      .[is_vaccinated2 == TRUE,
+      .[is_vaccinated == TRUE,
         is_infected := .sample_fixed_TRUE(.N, n_start_infected_vaccinated)] %>%
-      .[is_vaccinated2 == FALSE,
+      .[is_vaccinated == FALSE,
        is_infected := .sample_fixed_TRUE(.N, n_start_infected_unvaccinated)] %>%
       .[, newly_infected := is_infected]
 
@@ -169,7 +170,7 @@ simulate_covid <- function(
       # *at start of day* ----
 
       # what proportion are vaccinated
-      current_vac_rate <- aus[, sum(is_vaccinated2)] / n_population
+      current_vac_rate <- aus[, sum(is_vaccinated)] / n_population
       message("\t\tVaccination rate: ", round(current_vac_rate, 3))
 
       # reset new vaccinations
@@ -179,12 +180,12 @@ simulate_covid <- function(
 
       if (vaccinate_more) {
 
-        aus[is_vaccinated2 == FALSE & is_dead == FALSE,
+        aus[is_vaccinated == FALSE & is_dead == FALSE,
             newly_vaccinated := .sample_fixed_TRUE(.N, iteration_vaccinations)] %>%
           .[newly_vaccinated == TRUE,
-            vaccination_type := .get_vaccination_type(age,
-                                                      over60az = over60_az_share,
-                                                      under60az = under60_az_share)]
+            vaccine_type := .get_vaccination_type(age,
+                                                  over60az = over60_az_share,
+                                                  under60az = under60_az_share)]
 
         # is the vaccination happening AFTER a person has already been infected?
         aus[is_infected == TRUE & newly_vaccinated == TRUE,
@@ -192,13 +193,13 @@ simulate_covid <- function(
 
         # convert to a vaccination (ie: these are vaccines administered 14 days ago)
         aus[newly_vaccinated == TRUE,
-            is_vaccinated2 := TRUE]
+            is_vaccinated := TRUE]
 
         }
 
       # how many new infected:
-      n_infected_and_vaccinated <- aus[, sum(newly_infected & is_vaccinated2)]
-      n_infected_and_unvaccinated <- aus[, sum(newly_infected & !is_vaccinated2)]
+      n_infected_and_vaccinated <- aus[, sum(newly_infected & is_vaccinated)]
+      n_infected_and_unvaccinated <- aus[, sum(newly_infected & !is_vaccinated)]
 
       # Number of infected due to transmission and R but not infection
       n_maybe_infected <- n_infected_and_vaccinated * R * vac_transmission_rate +
@@ -220,14 +221,14 @@ simulate_covid <- function(
       aus[,
           newly_infected := FALSE]
 
-        # if maybe infected: zero chance if previously infected; lower chance if vaccinated
+      # if maybe infected: zero chance if previously infected; lower chance if vaccinated
       aus[,
           newly_infected := fcase(
-            maybe_infected == TRUE & is_vaccinated2 == TRUE,
-              runif(.N) <= vac_infection_rate, # CHANGE
+            maybe_infected == TRUE & is_vaccinated == TRUE,
+              runif(.N) <= (1 - .get_vaccine_characteristic(vaccine_type, vaccine_dose, "poi")), # CHANGE
             maybe_infected == TRUE & is_infected == TRUE,
               FALSE,
-            maybe_infected == TRUE & !is_vaccinated2 & !is_infected,
+            maybe_infected == TRUE & !is_vaccinated & !is_infected,
               TRUE,
             maybe_infected == FALSE,
               FALSE
@@ -236,10 +237,13 @@ simulate_covid <- function(
 
       # Of the people who become infected, who requires hospitalisation, and
       # who will die?
+
       aus[newly_infected == TRUE,
-          is_hosp := runif(.N) < covid_age_hospitalisation_prob(age, vaccine_type)] %>%
-        .[newly_infected == TRUE,
-          is_dead := runif(.N) < covid_age_death_prob(age, vaccine_type)]
+          is_hosp := runif(.N) < covid_age_hospitalisation_prob(age, vaccine_type, vaccine_dose)]
+
+      aus[newly_infected == TRUE,
+          is_dead := runif(.N) < covid_age_death_prob(age, vaccine_type, vaccine_dose,
+                                                      .treatment_improvement = treatment_death_reduction)]
 
 
       # generate summary of new cases ---

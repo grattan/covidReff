@@ -16,7 +16,6 @@ covid_age_hospitalisation_prob <- function(.age,
     vaccine = .vaccine, dose = .dose, characteristic = "poh"
   )
 
-
   hr <- hr * (1 - .vac_hospitalisation_reduction)
 
   return(hr)

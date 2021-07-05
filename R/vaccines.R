@@ -1,29 +1,5 @@
 # vaccine characteristics
 
-.get_vaccine_characteristic <- function(vaccine, dose = NA, characteristic) {
-
-  purrr::pmap_dbl(
-    list(vaccine,
-         dose,
-         characteristic),
-    function(a, b, c) {
-
-      ret <- vaccine_characteristics %>%
-        filter(vaccine_name == a,
-               after_dose == b,
-               varname == c) %>%
-        pull(value)
-
-      if (purrr::is_empty(ret)) ret <- 0
-
-      return(ret)
-
-    }
-  )
-
-
-}
-
 
 .get_vaccination_type <- function(age, over60az, under60az) {
 
@@ -41,3 +17,14 @@
 
   return(ret)
 }
+
+
+.get_vaccine_characteristic <- function(vaccine,
+                                        dose,
+                                        characteristic) {
+  if_else(vaccine == "none",
+          0,
+          get(paste(vaccine, dose, characteristic, sep = "_")))
+}
+
+
