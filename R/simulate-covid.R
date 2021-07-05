@@ -362,7 +362,6 @@ simulate_covid <- function(
       if (!quiet) {
         message(bad$bold("\tTotal infected:\t\t", scales::comma(tot_inf),
                 " (", scales::percent(tot_inf/n_population, 0.1), ")"))
-        flush.console()
       }
 
     } # end day loop

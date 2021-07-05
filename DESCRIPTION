@@ -19,7 +19,8 @@ Imports:
     data.table,
     magrittr,
     tibble,
-    scales
+    scales,
+    crayon
 Suggests: 
     testthat
 RoxygenNote: 7.1.1

@@ -2,6 +2,7 @@
 
 export(get_population_rate)
 export(simulate_covid)
+import(crayon)
 import(data.table)
 importFrom(dplyr,bind_rows)
 importFrom(dplyr,count)
