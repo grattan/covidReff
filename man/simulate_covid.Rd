@@ -15,17 +15,11 @@ A shorter \code{serial_interval} will speed up the virus spread.}
 
 \item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90.}
 
-\item{vac_infection_reduction}{The reduction in the likelihood of infection relative to an unvaccinated person. A single numeric with default 0.8. This default represents a reduction in the probability of infection of 80 per cent.}
-
 \item{vac_transmission_reduction}{The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.}
-
-\item{vac_hospitalisation_reduction}{The reduction in the likelihood, given an infection, of requiring hospitalisation for a vaccinated person. A single numeric defaulting to 0.95.}
-
-\item{vac_death_reduction}{The reduction in the likelihood, given an infection, of death for a vaccinated person. A single numeric defaulting to 0.99.}
 
 \item{hospitalisation_per_death}{Average number of hospitalisations for each death that occurs. A single numeric with default 20.}
 
-\item{death_rate}{The likelihood that an infected person dies. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.}
+\item{death_rate}{The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.}
 
 \item{treatment_death_reduction}{The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.}
 
@@ -62,8 +56,6 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 \item{\code{in_R}}{Input \code{R} value.}
 \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
-\item{\code{in_vac_infection_reduction}}{Input \code{vac_infection_reduction}.}
-\item{\code{in_vac_transmission_reduction}}{Input \code{vac_transmission_reduction}.}
 }
 \description{
 Simulate covid for a given reproduction number, level of

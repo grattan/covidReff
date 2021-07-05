@@ -12,12 +12,9 @@
 #' @param vaccination_levels Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}
 #' @param weekly_vaccinations The additional proportion of the population vaccinated per 7 days. A single numeric with default 0.005. The additional proportion of the population vaccinated each week
 #' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90.
-#' @param vac_infection_reduction The reduction in the likelihood of infection relative to an unvaccinated person. A single numeric with default 0.8. This default represents a reduction in the probability of infection of 80 per cent.
 #' @param vac_transmission_reduction The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.
-#' @param vac_hospitalisation_reduction The reduction in the likelihood, given an infection, of requiring hospitalisation for a vaccinated person. A single numeric defaulting to 0.95.
-#' @param vac_death_reduction The reduction in the likelihood, given an infection, of death for a vaccinated person. A single numeric defaulting to 0.99.
 #' @param hospitalisation_per_death Average number of hospitalisations for each death that occurs. A single numeric with default 20.
-#' @param death_rate The likelihood that an infected person dies. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
+#' @param death_rate The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
 #' @param treatment_death_reduction The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.
 #' @param n_population Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).
 #' @param n_start_infected The number of people infected at the beginning of the simulation. Defaults to 100 people infected at day 0.
@@ -46,8 +43,6 @@
 #' \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 #' \item{\code{in_R}}{Input \code{R} value.}
 #' \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
-#' \item{\code{in_vac_infection_reduction}}{Input \code{vac_infection_reduction}.}
-#' \item{\code{in_vac_transmission_reduction}}{Input \code{vac_transmission_reduction}.}
 #'
 #'
 #'
@@ -78,10 +73,7 @@ simulate_covid <- function(
   p_max_vaccinated = 0.90,
   over60_az_share  = 0.80, # what % of vaccines for older   people are AstraZeneca?
   under60_az_share = 0.20, # what % of vaccines for younger people are AstraZeneca?
-  vac_infection_reduction = 0.8,
   vac_transmission_reduction = 0.5,
-  vac_hospitalisation_reduction = 0.95,
-  vac_death_reduction = 0.99,
   hospitalisation_per_death = 20,
   death_rate = "loglinear",
   treatment_death_reduction = 0.2,
@@ -94,10 +86,7 @@ simulate_covid <- function(
   scenario = 1
 ) {
 
-  # convert to rates
-  vac_infection_rate <- 1 - vac_infection_reduction
   vac_transmission_rate <- 1 - vac_transmission_reduction
-
 
   # get Australia population
   base_aus <- .read_demographics(uncounted = TRUE,
@@ -298,9 +287,7 @@ simulate_covid <- function(
            scenario = scenario) %>%
     relocate(scenario, runid, iteration, day, starts_with("new"), starts_with("total")) %>%
     mutate(in_R = R,
-           in_vaccination_levels = list(vaccination_levels),
-           in_vac_infection_reduction = vac_infection_reduction,
-           in_vac_transmission_reduction = vac_transmission_reduction)
+           in_vaccination_levels = list(vaccination_levels))
 
     return(iterations)
 
