@@ -8,7 +8,8 @@ zero_vac_sim_R5 <- simulate_covid(
   vaccination_levels = 0,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
-  n_population = 26000
+  n_population = 26000,
+  quiet = TRUE
   )
 
 high_vac_sim_R5 <- simulate_covid(
@@ -18,17 +19,19 @@ high_vac_sim_R5 <- simulate_covid(
   vaccination_levels = .9,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
-  n_population = 26000
+  n_population = 26000,
+  quiet = TRUE
   )
 
 
 stagger <- simulate_covid(
   R = 3,
-  n_iterations = 20,
+  n_iterations = 10,
   n_start_infected = 10,
-  n_population = 2600,
+  n_population = 26000,
   run_simulations = 5,
-  stagger_simulations = 7
+  stagger_simulations = 7,
+  quiet = TRUE
 )
 
 
@@ -44,8 +47,8 @@ test_that("simulation returns sensible results", {
 
 
 test_that("staggering works", {
-  expect_equal(stagger$day[[10]], 7)
-  expect_equal(stagger$day[[21]], 14)
+  expect_equal(stagger$day[[12]], 7)
+  expect_equal(stagger$day[[23]], 14)
 })
 
 
