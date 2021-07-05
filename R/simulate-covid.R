@@ -48,7 +48,6 @@
 #' \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}
 #'
 #'
-#'
 #' @export
 
 
@@ -57,6 +56,12 @@ globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
                   "new_cases_i", "new_dead_i", "new_hosp_i", "newly_infected", "new_first_dose",
                   "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose",
                   "days_since_first_dose", "start_first_dose"))
+
+# terminal styles
+bad <- red
+good <- green
+note <- cyan
+notebold <- bgCyan$white$bold
 
 
 simulate_covid <- function(
@@ -88,7 +93,7 @@ simulate_covid <- function(
   n_iterations =  3,
   run_simulations = 1,
   stagger_simulations = 0,
-  scenario = 1,
+  scenario = "1",
   quiet = FALSE
 ) {
 
@@ -101,6 +106,10 @@ simulate_covid <- function(
 
   # function to estimate the Reff once (split this out)
   simulate_covid_run <- function(runid) {
+
+
+    message(notebold("Scenario", scenario, "\t|\trun", runid))
+
 
     aus <- base_aus
 
@@ -132,18 +141,31 @@ simulate_covid <- function(
         days_since_first_dose := 1000] %>%
       .[is_vaccinated == FALSE,
         days_since_first_dose := 0] %>%
-      # some start first dose:
+    # some start with first dose:
       .[is_vaccinated == FALSE,
         start_first_dose := .sample_fixed_TRUE(.N, n_start_pf_first)] %>%
-      # all get pfizer:
       .[start_first_dose == TRUE,
-        vaccine_type := "pf"] %>%
-      .[start_first_dose == TRUE,
-        vaccine_dose := 1L] %>%
-      .[start_first_dose == TRUE,
-        days_since_first_dose := round(runif(.N,
-                                             min = 1,
-                                             max = pf_1_second_dose_wait_days))]
+        vaccine_dose := 1L]
+
+    # set vaccine types:
+      if (only_pfizer_after_opening) {
+        aus[start_first_dose == TRUE,
+            vaccine_type := factor("pf", vaccine_names)]
+      } else {
+        aus[start_first_dose == TRUE,
+            vaccine_type := .get_vaccination_type(age,
+                                                  over60az = over60_az_share,
+                                                  under60az = under60_az_share)]
+      }
+
+    # set
+    aus[start_first_dose == TRUE,
+      days_since_first_dose := round(runif(.N,
+                                           min = 1,
+                                           max = fifelse(vaccine_type == "pf",
+                                                         pf_1_second_dose_wait_days,
+                                                         az_1_second_dose_wait_days)))]
+
 
 
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
@@ -188,8 +210,7 @@ simulate_covid <- function(
       day_count <- t * serial_interval
 
       if (!quiet) {
-        message("Scenario: ", scenario, "; run: ", runid)
-        message("\tIteration: ", t, " (day ", day_count, ")")
+        message(note("Iteration: ", t, " ( day ", day_count, ")"))
       }
 
       # *at start of day* ----
@@ -197,7 +218,7 @@ simulate_covid <- function(
       # what proportion are vaccinated
       current_vac_rate <- aus[, sum(vaccine_dose > 0L)] / n_population
       if (!quiet) {
-        message("\t\tVaccination rate: ", round(current_vac_rate, 3))
+        message(good("\tVaccination rate:\t", scales::percent(current_vac_rate, 0.1)))
       }
 
       # progress first dose time periods and convert to second dose
@@ -206,11 +227,14 @@ simulate_covid <- function(
         .[days_since_first_dose > pf_1_second_dose_wait_days,
           vaccine_dose := 2L]
 
-      if (!quiet) {
-      message("\t\tVaccination status:")
-      count(aus, vaccine_dose) %>%
-        mutate(pc = 100 * n / sum(n)) %>%
-        print()
+      if (FALSE) {
+      message(good("\t\tVaccination status:"))
+      count(aus, vaccine_dose, vaccine_type) %>%
+        mutate(pc = round(100 * n / sum(n), 1)) %>%
+        capture.output() %>%
+        paste0(collapse = "\n") %>%
+        good() %>%
+        message()
       }
 
       # reset new vaccinations
@@ -246,7 +270,7 @@ simulate_covid <- function(
         aus[is_infected == TRUE & new_first_dose == TRUE,
             vaccinated_after_infection := TRUE]
 
-        }
+      }
 
       # INFECTIONS ----------------
       # how many new infected:
@@ -259,7 +283,7 @@ simulate_covid <- function(
       n_maybe_infected <- as.integer(n_maybe_infected)
 
       if (!quiet) {
-        message("\t\tMaybe infected: ", n_maybe_infected)
+        message(note("\tMaybe infected:\t\t", n_maybe_infected))
       }
 
       if (n_maybe_infected == 0) {
@@ -312,17 +336,17 @@ simulate_covid <- function(
       new_vaccinated <- aus[, sum(new_first_dose)]
 
       if (!quiet) {
-        message("\t\tNew cases: ", new_cases)
-        message("\t\tNew hospitalisated: ", new_hosp)
-        message("\t\tNew dead: ", new_dead)
-        message("\t\tNew vaccinated: ", new_vaccinated)
+        message(note("\tNew cases:\t\t", scales::comma(new_cases)))
+        message(bad("\tNew hospitalisated:\t", scales::comma(new_hosp)))
+        message(bad("\tNew dead:\t\t", scales::comma(new_dead)))
+        message(good("\tNew vaccinated:\t\t", scales::comma(new_vaccinated)))
       }
 
       add_cases <- tibble(iteration = t,
                           new_cases_i = new_cases,
-                          new_hosp_i  = new_hosp,
-                          new_dead_i  = new_dead,
-                          new_vaccinated_i  = new_vaccinated
+                          new_hosp_i = new_hosp,
+                          new_dead_i = new_dead,
+                          new_vaccinated_i = new_vaccinated
                           )
 
       if (t == 1) {
@@ -336,8 +360,9 @@ simulate_covid <- function(
       tot_inf <- sum(all_cases$new_cases_i)
 
       if (!quiet) {
-        message("\tTotal infected: ", scales::comma(tot_inf),
-                " (", scales::percent(tot_inf/n_population, 0.1), ")")
+        message(bad$bold("\tTotal infected:\t\t", scales::comma(tot_inf),
+                " (", scales::percent(tot_inf/n_population, 0.1), ")"))
+        flush.console()
       }
 
     } # end day loop

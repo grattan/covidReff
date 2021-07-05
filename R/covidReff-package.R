@@ -22,6 +22,7 @@
 #' @importFrom scales percent
 #' @importFrom stats weighted.mean
 #' @importFrom stats runif
+#' @import crayon
 
 
 #' @keywords internal
