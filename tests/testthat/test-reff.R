@@ -23,9 +23,9 @@ high_vac_sim_R5 <- simulate_covid(
 
 
 stagger <- simulate_covid(
-  R = 5,
-  n_iterations = 10,
-  n_start_infected = 1,
+  R = 3,
+  n_iterations = 20,
+  n_start_infected = 10,
   n_population = 2600,
   run_simulations = 5,
   stagger_simulations = 7

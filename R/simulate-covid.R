@@ -88,7 +88,8 @@ simulate_covid <- function(
   n_iterations =  3,
   run_simulations = 1,
   stagger_simulations = 0,
-  scenario = 1
+  scenario = 1,
+  quiet = FALSE
 ) {
 
   vac_transmission_rate <- 1 - vac_transmission_reduction
@@ -186,20 +187,31 @@ simulate_covid <- function(
 
       day_count <- t * serial_interval
 
-      message("Scenario: ", scenario, "; run: ", runid)
-      message("\tIteration: ", t, " (day ", day_count, ")")
+      if (!quiet) {
+        message("Scenario: ", scenario, "; run: ", runid)
+        message("\tIteration: ", t, " (day ", day_count, ")")
+      }
 
       # *at start of day* ----
 
       # what proportion are vaccinated
-      current_vac_rate <- aus[, sum(is_vaccinated)] / n_population
-      message("\t\tVaccination rate: ", round(current_vac_rate, 3))
+      current_vac_rate <- aus[, sum(vaccine_dose > 0L)] / n_population
+      if (!quiet) {
+        message("\t\tVaccination rate: ", round(current_vac_rate, 3))
+      }
 
       # progress first dose time periods and convert to second dose
       aus[vaccine_dose == 1L,
           days_since_first_dose := days_since_first_dose + serial_interval] %>%
         .[days_since_first_dose > pf_1_second_dose_wait_days,
           vaccine_dose := 2L]
+
+      if (!quiet) {
+      message("\t\tVaccination status:")
+      count(aus, vaccine_dose) %>%
+        mutate(pc = 100 * n / sum(n)) %>%
+        print()
+      }
 
       # reset new vaccinations
       aus[, new_first_dose := FALSE]
@@ -228,7 +240,7 @@ simulate_covid <- function(
           .[new_first_dose == TRUE,
             days_since_first_dose := 0] %>%
           .[new_first_dose == TRUE,
-            is_infected == TRUE]
+            is_vaccinated == TRUE]
 
         # is the vaccination happening AFTER a person has already been infected?
         aus[is_infected == TRUE & new_first_dose == TRUE,
@@ -236,6 +248,7 @@ simulate_covid <- function(
 
         }
 
+      # INFECTIONS ----------------
       # how many new infected:
       n_infected_and_vaccinated <- aus[, sum(newly_infected & vaccine_dose == 2L)]
       n_infected_and_unvaccinated <- aus[, sum(newly_infected & vaccine_dose < 2L)]
@@ -245,7 +258,9 @@ simulate_covid <- function(
                            n_infected_and_unvaccinated * R
       n_maybe_infected <- as.integer(n_maybe_infected)
 
-      message("\t\tMaybe infected: ", n_maybe_infected)
+      if (!quiet) {
+        message("\t\tMaybe infected: ", n_maybe_infected)
+      }
 
       if (n_maybe_infected == 0) {
         zero_count <- zero_count + 1
@@ -290,11 +305,24 @@ simulate_covid <- function(
 
       # generate summary of new cases ---
       newly <- aus[newly_infected == TRUE]
+
+      new_cases <- newly[, .N]
+      new_hosp <- newly[, sum(is_hosp)]
+      new_dead <- newly[, sum(is_dead)]
+      new_vaccinated <- aus[, sum(new_first_dose)]
+
+      if (!quiet) {
+        message("\t\tNew cases: ", new_cases)
+        message("\t\tNew hospitalisated: ", new_hosp)
+        message("\t\tNew dead: ", new_dead)
+        message("\t\tNew vaccinated: ", new_vaccinated)
+      }
+
       add_cases <- tibble(iteration = t,
-                          new_cases_i = newly[, .N],
-                          new_hosp_i  = newly[, sum(is_hosp)],
-                          new_dead_i  = newly[, sum(is_dead)],
-                          new_vaccinated_i  = aus[, sum(new_first_dose)]
+                          new_cases_i = new_cases,
+                          new_hosp_i  = new_hosp,
+                          new_dead_i  = new_dead,
+                          new_vaccinated_i  = new_vaccinated
                           )
 
       if (t == 1) {
@@ -307,8 +335,10 @@ simulate_covid <- function(
 
       tot_inf <- sum(all_cases$new_cases_i)
 
-      message("\tTotal infected: ", scales::comma(tot_inf),
-              " (", scales::percent(tot_inf/n_population, 0.1), ")")
+      if (!quiet) {
+        message("\tTotal infected: ", scales::comma(tot_inf),
+                " (", scales::percent(tot_inf/n_population, 0.1), ")")
+      }
 
     } # end day loop
 
