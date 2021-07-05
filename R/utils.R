@@ -14,7 +14,7 @@
 
   if (length(levels) == 1) return(levels)
 
-  fcase(
+  ret <- fcase(
       age <=  10, levels[1],
       age <=  20, levels[2],
       age <=  30, levels[3],
@@ -26,6 +26,7 @@
       age <=  90, levels[9],
       age >   90, levels[10]
     )
+
 }
 
 

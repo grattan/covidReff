@@ -11,6 +11,9 @@
 #' A shorter \code{serial_interval} will speed up the virus spread.
 #' @param vaccination_levels Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}
 #' @param weekly_vaccinations The additional proportion of the population vaccinated per 7 days. A single numeric with default 0.005. The additional proportion of the population vaccinated each week
+#' @param only_pfizer_after_opening When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of
+#' @param over60_az_share   The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
+#' @param under60_az_share  The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
 #' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90.
 #' @param vac_transmission_reduction The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.
 #' @param hospitalisation_per_death Average number of hospitalisations for each death that occurs. A single numeric with default 20.
@@ -51,8 +54,9 @@
 
 globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
                   "is_vaccinated", "new_vaccinated_i", "iteration", "maybe_infected",
-                  "new_cases_i", "new_dead_i", "new_hosp_i", "newly_infected", "newly_vaccinated",
-                  "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose"))
+                  "new_cases_i", "new_dead_i", "new_hosp_i", "newly_infected", "new_first_dose",
+                  "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose",
+                  "days_since_first_dose", "start_first_dose"))
 
 
 simulate_covid <- function(
@@ -70,10 +74,11 @@ simulate_covid <- function(
     "81-90" = 0.95,
     "91+"   = 0.95),
   weekly_vaccinations = 0.005,
+  only_pfizer_after_opening = TRUE,
+  over60_az_share  = 0.80,
+  under60_az_share = 0.20,
   p_max_vaccinated = 0.90,
-  over60_az_share  = 0.80, # what % of vaccines for older   people are AstraZeneca?
-  under60_az_share = 0.20, # what % of vaccines for younger people are AstraZeneca?
-  vac_transmission_reduction = 0.5,
+  vac_transmission_reduction = 0.50,
   hospitalisation_per_death = 20,
   death_rate = "loglinear",
   treatment_death_reduction = 0.2,
@@ -100,19 +105,45 @@ simulate_covid <- function(
 
     n_population <- nrow(aus)
 
-    # vaccinate (some of) the nation
+    # fully vaccinate (some of) the nation
     aus[, vaccine_type := factor("none",
                                  levels = vaccine_names)] %>%
-      .[, vaccine_dose := 0] %>%
+      .[, vaccine_dose := 0L] %>%
+      # fully vaccinated start:
       .[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
-                                                                vaccination_levels)] %>%
-        # if vaccinated, what vaccine?
+                                                               vaccination_levels)] %>%
+
+      # if fully vaccinated, what vaccine?
       .[is_vaccinated == TRUE,
         vaccine_type := .get_vaccination_type(age,
                                               over60az = over60_az_share,
                                               under60az = under60_az_share)] %>%
       .[is_vaccinated == TRUE,
-        vaccine_dose := 2]
+        vaccine_dose := 2L]
+
+    # how many should have first dose?
+    #                           number of people vaccinated per day    x  number of days until second dose
+    n_start_pf_first <- round((n_population * weekly_vaccinations / 7) * pf_1_second_dose_wait_days)
+
+    # first dose some of the population with Pfizer
+    # set days_since_first_dose:
+    aus[is_vaccinated == TRUE,
+        days_since_first_dose := 1000] %>%
+      .[is_vaccinated == FALSE,
+        days_since_first_dose := 0] %>%
+      # some start first dose:
+      .[is_vaccinated == FALSE,
+        start_first_dose := .sample_fixed_TRUE(.N, n_start_pf_first)] %>%
+      # all get pfizer:
+      .[start_first_dose == TRUE,
+        vaccine_type := "pf"] %>%
+      .[start_first_dose == TRUE,
+        vaccine_dose := 1L] %>%
+      .[start_first_dose == TRUE,
+        days_since_first_dose := round(runif(.N,
+                                             min = 1,
+                                             max = pf_1_second_dose_wait_days))]
+
 
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
@@ -153,8 +184,10 @@ simulate_covid <- function(
     # loop over iterations -----------
     for (t in seq_len(n_iterations)) {
 
+      day_count <- t * serial_interval
+
       message("Scenario: ", scenario, "; run: ", runid)
-      message("\tIteration: ", t, " (day ", t*serial_interval, ")")
+      message("\tIteration: ", t, " (day ", day_count, ")")
 
       # *at start of day* ----
 
@@ -162,33 +195,50 @@ simulate_covid <- function(
       current_vac_rate <- aus[, sum(is_vaccinated)] / n_population
       message("\t\tVaccination rate: ", round(current_vac_rate, 3))
 
+      # progress first dose time periods and convert to second dose
+      aus[vaccine_dose == 1L,
+          days_since_first_dose := days_since_first_dose + serial_interval] %>%
+        .[days_since_first_dose > pf_1_second_dose_wait_days,
+          vaccine_dose := 2L]
+
       # reset new vaccinations
-      aus[, newly_vaccinated := FALSE]
+      aus[, new_first_dose := FALSE]
 
       vaccinate_more <- current_vac_rate < p_max_vaccinated
 
       if (vaccinate_more) {
 
         aus[is_vaccinated == FALSE & is_dead == FALSE,
-            newly_vaccinated := .sample_fixed_TRUE(.N, iteration_vaccinations)] %>%
-          .[newly_vaccinated == TRUE,
-            vaccine_type := .get_vaccination_type(age,
-                                                  over60az = over60_az_share,
-                                                  under60az = under60_az_share)]
+            new_first_dose := .sample_fixed_TRUE(.N, iteration_vaccinations)]
+
+        # if only pfizer after opening:
+        if (only_pfizer_after_opening) {
+          aus[new_first_dose == TRUE,
+              vaccine_type := factor("pf", vaccine_names)]
+        } else {
+          aus[new_first_dose == TRUE,
+              vaccine_type := .get_vaccination_type(age,
+                                                    over60az = over60_az_share,
+                                                    under60az = under60_az_share)]
+        }
+
+        # for the newly vaccined:
+        aus[new_first_dose == TRUE,
+            vaccine_dose := 1L] %>%
+          .[new_first_dose == TRUE,
+            days_since_first_dose := 0] %>%
+          .[new_first_dose == TRUE,
+            is_infected == TRUE]
 
         # is the vaccination happening AFTER a person has already been infected?
-        aus[is_infected == TRUE & newly_vaccinated == TRUE,
+        aus[is_infected == TRUE & new_first_dose == TRUE,
             vaccinated_after_infection := TRUE]
-
-        # convert to a vaccination (ie: these are vaccines administered 14 days ago)
-        aus[newly_vaccinated == TRUE,
-            is_vaccinated := TRUE]
 
         }
 
       # how many new infected:
-      n_infected_and_vaccinated <- aus[, sum(newly_infected & is_vaccinated)]
-      n_infected_and_unvaccinated <- aus[, sum(newly_infected & !is_vaccinated)]
+      n_infected_and_vaccinated <- aus[, sum(newly_infected & vaccine_dose == 2L)]
+      n_infected_and_unvaccinated <- aus[, sum(newly_infected & vaccine_dose < 2L)]
 
       # Number of infected due to transmission and R but not infection
       n_maybe_infected <- n_infected_and_vaccinated * R * vac_transmission_rate +
@@ -213,11 +263,14 @@ simulate_covid <- function(
       # if maybe infected: zero chance if previously infected; lower chance if vaccinated
       aus[,
           newly_infected := fcase(
-            maybe_infected == TRUE & is_vaccinated == TRUE,
-              runif(.N) <= (1 - .get_vaccine_characteristic(vaccine_type, vaccine_dose, "poi")), # CHANGE
+            # if contact but already infected: can't be infected
             maybe_infected == TRUE & is_infected == TRUE,
               FALSE,
-            maybe_infected == TRUE & !is_vaccinated & !is_infected,
+            # if contact and vaccinated: lower chance of being infected
+            maybe_infected == TRUE & vaccine_dose > 0L,
+              runif(.N) <= (1 - .get_vaccine_characteristic(vaccine_type, vaccine_dose, "poi")), # CHANGE
+            # if contact and unvaccinated:
+            maybe_infected == TRUE & vaccine_dose == 0L,
               TRUE,
             maybe_infected == FALSE,
               FALSE
@@ -241,7 +294,7 @@ simulate_covid <- function(
                           new_cases_i = newly[, .N],
                           new_hosp_i  = newly[, sum(is_hosp)],
                           new_dead_i  = newly[, sum(is_dead)],
-                          new_vaccinated_i  = aus[, sum(newly_vaccinated)]
+                          new_vaccinated_i  = aus[, sum(new_first_dose)]
                           )
 
       if (t == 1) {
@@ -254,7 +307,8 @@ simulate_covid <- function(
 
       tot_inf <- sum(all_cases$new_cases_i)
 
-      message("\tTotal infected: ", scales::comma(tot_inf), " (", scales::percent(tot_inf/n_population, 0.1), ")")
+      message("\tTotal infected: ", scales::comma(tot_inf),
+              " (", scales::percent(tot_inf/n_population, 0.1), ")")
 
     } # end day loop
 

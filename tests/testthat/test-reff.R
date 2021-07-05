@@ -1,4 +1,5 @@
 # check:
+# devtools::load_all()
 
 zero_vac_sim_R5 <- simulate_covid(
   R = 5,
@@ -23,7 +24,8 @@ high_vac_sim_R5 <- simulate_covid(
 
 stagger <- simulate_covid(
   R = 5,
-  n_iterations = 2,
+  n_iterations = 10,
+  n_start_infected = 1,
   n_population = 2600,
   run_simulations = 5,
   stagger_simulations = 7
@@ -42,8 +44,8 @@ test_that("simulation returns sensible results", {
 
 
 test_that("staggering works", {
-  expect_equal(stagger$day[[4]], 7)
-  expect_equal(stagger$day[[7]], 14)
+  expect_equal(stagger$day[[10]], 7)
+  expect_equal(stagger$day[[21]], 14)
 })
 
 

@@ -13,6 +13,12 @@ A shorter \code{serial_interval} will speed up the virus spread.}
 
 \item{weekly_vaccinations}{The additional proportion of the population vaccinated per 7 days. A single numeric with default 0.005. The additional proportion of the population vaccinated each week}
 
+\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of}
+
+\item{over60_az_share}{The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
+
+\item{under60_az_share}{The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
+
 \item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90.}
 
 \item{vac_transmission_reduction}{The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.}
