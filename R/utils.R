@@ -48,7 +48,7 @@
 
 
 .read_demographics <- function(uncounted = TRUE,
-                               n_pop = 2.6e6
+                               n_pop = 25698093
                                ) {
 
   scale_factor <- n_pop / sum(auspop$n)

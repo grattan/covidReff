@@ -94,7 +94,7 @@ simulate_covid <- function(
   run_simulations = 1,
   stagger_simulations = 0,
   scenario = "1",
-  quiet = FALSE
+  quiet = n_population < 100e3
 ) {
 
   vac_transmission_rate <- 1 - vac_transmission_reduction
@@ -210,7 +210,7 @@ simulate_covid <- function(
       day_count <- t * serial_interval
 
       if (!quiet) {
-        message(note("Iteration: ", t, " ( day ", day_count, ")"))
+        message(note$underline("Iteration: ", t, " ( day ", day_count, ")\t\t\t"))
       }
 
       # *at start of day* ----
@@ -334,19 +334,31 @@ simulate_covid <- function(
       new_hosp <- newly[, sum(is_hosp)]
       new_dead <- newly[, sum(is_dead)]
       new_vaccinated <- aus[, sum(new_first_dose)]
+      total_vaccinated1 <- aus[vaccine_dose == 1L, .N]
+      total_vaccinated2 <- aus[vaccine_dose == 2L, .N]
+      total_pf <- aus[vaccine_type == "pf", .N]
+      total_az <- aus[vaccine_type == "az", .N]
 
       if (!quiet) {
         message(note("\tNew cases:\t\t", scales::comma(new_cases)))
         message(bad("\tNew hospitalisated:\t", scales::comma(new_hosp)))
         message(bad("\tNew dead:\t\t", scales::comma(new_dead)))
         message(good("\tNew vaccinated:\t\t", scales::comma(new_vaccinated)))
+        message(good("\tTotal first dose:\t", scales::comma(total_vaccinated1)))
+        message(good("\tTotal second dose:\t", scales::comma(total_vaccinated2)))
+        message(good("\tTotal Pfizer:\t\t", scales::comma(total_pf)))
+        message(good("\tTotal AZ:\t\t", scales::comma(total_az)))
       }
 
       add_cases <- tibble(iteration = t,
                           new_cases_i = new_cases,
                           new_hosp_i = new_hosp,
                           new_dead_i = new_dead,
-                          new_vaccinated_i = new_vaccinated
+                          new_vaccinated_i = new_vaccinated,
+                          total_vaccinated1_i = total_vaccinated1,
+                          total_vaccinated2_i = total_vaccinated2,
+                          total_pf_i = total_pf,
+                          total_az_i = total_az
                           )
 
       if (t == 1) {
