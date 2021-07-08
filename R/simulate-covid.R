@@ -217,7 +217,7 @@ simulate_covid <- function(
 
       # what proportion are vaccinated
       current_vac_rate <- aus[, sum(vaccine_dose > 0L)] / n_population
-      current_vac2_rate <- aus[, sum(vaccine_dose > 2L)] / n_population
+      current_vac2_rate <- aus[, sum(vaccine_dose > 1L)] / n_population
       if (!quiet) {
         message(good("\tVaccination rate, dose 1:\t", scales::percent(current_vac_rate, 0.1)))
         message(good("\tVaccination rate, dose 2:\t", scales::percent(current_vac2_rate, 0.1)))
