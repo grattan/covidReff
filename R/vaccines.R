@@ -17,14 +17,3 @@
 
   return(ret)
 }
-
-
-.get_vaccine_characteristic <- function(vaccine,
-                                        dose,
-                                        characteristic) {
-  if_else(vaccine == "none",
-          0,
-          get(paste(vaccine, dose, characteristic, sep = "_")))
-}
-
-

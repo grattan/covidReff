@@ -42,17 +42,37 @@ The `simulate_covid()` runs simulations of Covid spreading and returns a `tibble
 
 ```{r}
 sim_results <- simulate_covid()
+```
+
+The resulting `tibble` is:
+
+```{r}
 sim_results
 ```
 
-The key inputs for the `simulate_covid()` function are `R0` and `vaccination_levels`:
+The key inputs of the `simulate_covid()` function -- among many -- are the reproduction value of the virus in a 'relaxed' Australian society, `R`, and the proportion of the **whole** population that are vaccinated, `vaccination_levels`. 
 
 ```{r}
-# oh no
-oh_no <- simulate_covid(R = 8, vaccination_levels = .5)
-oh_no
-# okay!
-okay <- simulate_covid(R = 2, vaccination_levels = .9)
-okay
+sim_r8_50 <- simulate_covid(R = 8, 
+                            vaccination_levels = .5)
 ```
 
+The `vaccination_levels` is provided as either a single numeric for vaccination levels uniformly-distributed across age groups (as above), or you can provide a numeric vector of length `10` describing the vaccination rates for age groups `1-10`, `11-20`, `21-30`, ..., `91-100`.
+
+```{r}
+sim_r4_50 <- simulate_covid(
+  R = 4, 
+  vaccination_levels = c(
+    "0-10"  = 0.00,
+    "11-20" = 0.40,
+    "21-30" = 0.60,
+    "31-40" = 0.60,
+    "41-50" = 0.60,
+    "51-60" = 0.70,
+    "61-70" = 0.90,
+    "71-80" = 0.90,
+    "81-90" = 0.95,
+    "91+"   = 0.95)
+  )
+sim_r4_50
+```

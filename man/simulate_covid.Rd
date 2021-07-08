@@ -48,6 +48,7 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{runid}}{The simulation run number.}
 \item{\code{iteration}}{The iteration of the scenario simulation run.}
 \item{\code{day}}{Days since beginning of simulation, where \code{day = iteration * serial_iterval}.}
+\item{\code{new_maybe_infected_i}}{the number of new possible Covid cases in iteration \code{i} (interpreted as contacts that would become cases without vaccines).}
 \item{\code{new_cases_i}}{the number of new Covid cases in iteration \code{i}.}
 \item{\code{new_hosp_i}}{the number of new Covid hospitalisations in iteration \code{i}.}
 \item{\code{new_dead_i}}{the number of new Covid dead in iteration \code{i}.}
@@ -58,7 +59,6 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.}
 \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
-\item{\code{reff}}{The overall effective reproduction number. Derived from sum of all new cases, number of cases initially, and the number of iterations with: \code{(total_cases / initial_cases)^(1/iterations) - 1}.}
 \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 \item{\code{in_R}}{Input \code{R} value.}
 \item{\code{in_vaccination_levels}}{Input \code{vaccination_levels}.}

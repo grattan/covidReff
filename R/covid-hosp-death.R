@@ -2,8 +2,8 @@
 
 # Hopsitalisation function
 covid_age_hospitalisation_prob <- function(.age,
-                                           .vaccine = "none",
-                                           .dose = 0,
+                                           .vaccine,
+                                           .dose,
                                            .hospitalisation_per_death = 20,
                                            .max_hospitalisation_rate = 0.90) {
 
@@ -12,8 +12,12 @@ covid_age_hospitalisation_prob <- function(.age,
   hr <- if_else(hr > .max_hospitalisation_rate, .max_hospitalisation_rate, hr)
 
   # add vaccine protection
-  .vac_hospitalisation_reduction <- .get_vaccine_characteristic(
-    vaccine = .vaccine, dose = .dose, characteristic = "poh"
+  .vac_hospitalisation_reduction <- fcase(
+    .vaccine == "pf" & .dose == 1L, pf_1_poh,
+    .vaccine == "pf" & .dose == 2L, pf_2_poh,
+    .vaccine == "az" & .dose == 1L, az_1_poh,
+    .vaccine == "az" & .dose == 2L, az_2_poh,
+    .vaccine == "none", 0
   )
 
   hr <- hr * (1 - .vac_hospitalisation_reduction)
@@ -42,8 +46,12 @@ covid_age_death_prob <- function(.age,
   ifr <- ifr * (1 - .treatment_improvement)
 
   # add vaccine protection
-  .vac_death_reduction <- .get_vaccine_characteristic(
-    vaccine = .vaccine, dose = .dose, characteristic = "pod"
+  .vac_death_reduction <- fcase(
+      .vaccine == "pf" & .dose == 1L, pf_1_pod,
+      .vaccine == "pf" & .dose == 2L, pf_2_pod,
+      .vaccine == "az" & .dose == 1L, az_1_pod,
+      .vaccine == "az" & .dose == 2L, az_2_pod,
+      .vaccine == "none", 0
     )
 
   ifr <- ifr * (1 - .vac_death_reduction)

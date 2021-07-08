@@ -12,11 +12,25 @@ zero_vac_sim_R5 <- simulate_covid(
   quiet = TRUE
   )
 
+# 85% w kids
+vacc85_kids <- c(
+  "0-10"  = 0.80,
+  "11-20" = 0.80,
+  "21-30" = 0.75,
+  "31-40" = 0.85,
+  "41-50" = 0.90,
+  "51-60" = 0.90,
+  "61-70" = 0.90,
+  "71-80" = 0.95,
+  "81-90" = 0.95,
+  "91+"   = 0.95)
+
 high_vac_sim_R5 <- simulate_covid(
   R = 5,
-  n_iterations = 2,
-  run_simulations = 1,
-  vaccination_levels = .9,
+  n_iterations = 5,
+  run_simulations = 5,
+  vaccination_levels = vacc85_kids,
+  # vaccination_levels = .75,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
   n_population = 26000,
@@ -25,13 +39,10 @@ high_vac_sim_R5 <- simulate_covid(
 
 
 stagger <- simulate_covid(
-  R = 4,
-  vaccination_levels = .7,
-  n_iterations = 10,
-  n_start_infected = 1,
+  n_iterations = 2,
+  run_simulations = 3,
+  stagger_simulations = 5,
   n_population = 26000,
-  run_simulations = 5,
-  stagger_simulations = 7,
   quiet = TRUE
 )
 
@@ -40,16 +51,16 @@ test_that("simulation returns sensible results", {
 
   # reff
   expect_equal(max(zero_vac_sim_R5$rt_i, na.rm = TRUE), 5)
-  expect_lt(high_vac_sim_R5$reff[1], 2)
+  expect_lt(high_vac_sim_R5$rt_i[2], 2)
   expect_equal(nrow(zero_vac_sim_R5), 2 + 1)
-  expect_equal(ncol(zero_vac_sim_R5), 17)
+  expect_equal(ncol(zero_vac_sim_R5), 21)
   expect_equal(zero_vac_sim_R5$new_cases_i[1], 5)
 })
 
 
 test_that("staggering works", {
-  expect_equal(stagger$day[[12]], 7)
-  expect_equal(stagger$day[[23]], 14)
+  expect_equal(stagger$day[[4]], 5)
+  expect_equal(stagger$day[[7]], 10)
 })
 
 
