@@ -30,7 +30,6 @@ high_vac_sim_R5 <- simulate_covid(
   n_iterations = 5,
   run_simulations = 5,
   vaccination_levels = vacc85_kids,
-  # vaccination_levels = .75,
   vac_transmission_reduction = 0.5,
   n_start_infected = 5,
   n_population = 26000,

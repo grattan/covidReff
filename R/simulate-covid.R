@@ -10,11 +10,11 @@
 #' @param serial_interval The average number of days between a person becoming infected and infecting others. A single numeric with default of 5, appropriate for wild type/Delta variant: \href{https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}{Pung et al (2021)}).
 #' A shorter \code{serial_interval} will speed up the virus spread.
 #' @param vaccination_levels Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}
-#' @param weekly_vaccinations The additional proportion of the population vaccinated per 7 days. A single numeric with default 0.005. The additional proportion of the population vaccinated each week
+#' @param vaccination_growth_factor Defines how quickly additional people are vaccinated after opening, defaulting to 0.01. This is the growth parameter (\code{c}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
+#' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
 #' @param only_pfizer_after_opening When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of
 #' @param over60_az_share   The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
 #' @param under60_az_share  The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
-#' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90.
 #' @param vac_transmission_reduction The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.
 #' @param hospitalisation_per_death Average number of hospitalisations for each death that occurs. A single numeric with default 20.
 #' @param death_rate The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
@@ -78,7 +78,7 @@ simulate_covid <- function(
     "71-80" = 0.90,
     "81-90" = 0.95,
     "91+"   = 0.95),
-  weekly_vaccinations = 0.005,
+  vaccination_growth_factor = 0.01,
   only_pfizer_after_opening = TRUE,
   over60_az_share  = 0.80,
   under60_az_share = 0.20,
@@ -89,7 +89,6 @@ simulate_covid <- function(
   treatment_death_reduction = 0.2,
   n_population = 2e5,
   n_start_infected = 10,
-  p_max_infected = 0.8,
   n_iterations =  3,
   run_simulations = 1,
   stagger_simulations = 0,
@@ -202,8 +201,21 @@ simulate_covid <- function(
 
     zero_count <- 0
 
-    iteration_vaccinations <- round(weekly_vaccinations / 7 * serial_interval * n_population)
-    # - should add some decaying function for this
+    # function for vaccination rates:
+    logistic_curve <- function(t, M, n0, c) {
+      M / (1 + ((M - n0) / n0) * exp(-c*t))
+    }
+
+    #
+    pop_vaccinated <- get_population_rate(vaccination_levels)
+
+    current_vaccination_level <- logistic_curve(
+      0,
+      p_max_vaccinated,
+      pop_vaccinated,
+      vaccination_growth_factor)
+
+
 
     # loop over iterations -----------
     for (t in seq_len(n_iterations)) {
@@ -229,8 +241,18 @@ simulate_covid <- function(
 
       if (vaccinate_more) {
 
+        new_vaccination_level <- logistic_curve(
+          t * serial_interval,
+          p_max_vaccinated,
+          pop_vaccinated,
+          vaccination_growth_factor)
+
+        new_vaccinations <- round(n_population * (new_vaccination_level - current_vaccination_level))
+
+        current_vaccination_level <- new_vaccination_level
+
         aus[is_vaccinated == FALSE & is_dead == FALSE,
-            new_first_dose := .sample_fixed_TRUE(.N, iteration_vaccinations)]
+            new_first_dose := .sample_fixed_TRUE(.N, new_vaccinations)]
 
         # if only pfizer after opening:
         if (only_pfizer_after_opening) {
