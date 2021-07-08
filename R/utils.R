@@ -66,3 +66,8 @@
   return(ret)
 
 }
+
+# function for vaccination rates:
+.logistic_curve <- function(t, M, n0, c) {
+  M / (1 + ((M - n0) / n0) * exp(-c*t))
+}

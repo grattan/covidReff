@@ -132,8 +132,16 @@ simulate_covid <- function(
         vaccine_dose := 2L]
 
     # how many should have first dose?
-    #                           number of people vaccinated per day    x  number of days until second dose
-    n_start_pf_first <- round((n_population * weekly_vaccinations / 7) * pf_1_second_dose_wait_days)
+    pop_vaccinated <- get_population_rate(vaccination_levels)
+
+    # how many had first dose vaccines?
+    previous_vaccination_rates <- .logistic_curve(
+      -pf_1_second_dose_wait_days / serial_interval,
+      p_max_vaccinated,
+      pop_vaccinated,
+      vaccination_growth_factor)
+
+    n_start_pf_first <- round(n_population * (pop_vaccinated - previous_vaccination_rates))
 
     # first dose some of the population with Pfizer
     # set days_since_first_dose:
@@ -201,15 +209,7 @@ simulate_covid <- function(
 
     zero_count <- 0
 
-    # function for vaccination rates:
-    logistic_curve <- function(t, M, n0, c) {
-      M / (1 + ((M - n0) / n0) * exp(-c*t))
-    }
-
-    #
-    pop_vaccinated <- get_population_rate(vaccination_levels)
-
-    current_vaccination_level <- logistic_curve(
+    current_vaccination_level <- .logistic_curve(
       0,
       p_max_vaccinated,
       pop_vaccinated,
@@ -241,7 +241,7 @@ simulate_covid <- function(
 
       if (vaccinate_more) {
 
-        new_vaccination_level <- logistic_curve(
+        new_vaccination_level <- .logistic_curve(
           t * serial_interval,
           p_max_vaccinated,
           pop_vaccinated,
