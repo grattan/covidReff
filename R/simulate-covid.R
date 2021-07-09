@@ -203,8 +203,10 @@ simulate_covid <- function(
     start_conditions <- tibble(
       iteration = 0L,
       new_cases_i = n_start_infected,
+      new_cases_vaccinated2_i = n_start_infected_vaccinated,
       new_hosp_i  = 0,
       new_dead_i  = 0,
+      new_dead_vaccinated2_i  = 0,
       new_vaccinated_i = round(p_start_vaccinated * n_population))
 
     zero_count <- 0
