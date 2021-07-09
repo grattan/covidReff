@@ -8,7 +8,7 @@
 #'
 #' @param R The average number of additional people an infected person will infect in an unvaccinated society. It incorporates both the R0 of the variant and behaviours and policies may reduce alter transmission. A single numeric with default 4.5 to represent the Delta variant in a low-restriction society. See \href{https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf}{Kucharski et al (2021)}.
 #' @param serial_interval The average number of days between a person becoming infected and infecting others. A single numeric with default of 5, appropriate for wild type/Delta variant: \href{https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}{Pung et al (2021)}).
-#' A shorter \code{serial_interval} will speed up the virus spread.
+#' A shorter \code{serial_interval} will speed up the virus spread over time.
 #' @param vaccination_levels Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}
 #' @param vaccination_growth_factor Defines how quickly additional people are vaccinated after opening, defaulting to 0.01. This is the growth parameter (\code{c}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
 #' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
@@ -340,6 +340,8 @@ simulate_covid <- function(
       new_cases <- newly[, .N]
       new_hosp <- newly[, sum(is_hosp)]
       new_dead <- newly[, sum(is_dead)]
+      new_cases_vac <- newly[vaccine_dose == 2L, .N]
+      new_dead_vac <- newly[vaccine_dose == 2L, sum(is_dead)]
       new_vaccinated <- aus[, sum(new_first_dose)]
       total_vaccinated1 <- aus[vaccine_dose == 1L, .N]
       total_vaccinated2 <- aus[vaccine_dose == 2L, .N]
@@ -353,6 +355,7 @@ simulate_covid <- function(
         message(note("\tMaybe infected:    \t", scales::comma(n_maybe_infected)))
         message(note("\tNew cases:         \t", scales::comma(new_cases),
                      "(", scales::percent(new_cases/n_maybe_infected, 0.1), " of maybe infected)"))
+        message(note("\tNew cases fully vaccinated:", scales::comma(new_cases_vac), "/", scales::percent(new_cases_vac/new_cases)))
         message(bad("\tNew hospitalisated: \t", scales::comma(new_hosp)))
         message(bad("\tNew dead:           \t", scales::comma(new_dead)))
         message(good("\tNew vaccinated:    \t", scales::comma(new_vaccinated)))
@@ -365,8 +368,10 @@ simulate_covid <- function(
       add_cases <- tibble(iteration = t,
                           new_maybe_infected_i = n_maybe_infected,
                           new_cases_i = new_cases,
+                          new_cases_vaccinated2_i = new_cases_vac,
                           new_hosp_i = new_hosp,
                           new_dead_i = new_dead,
+                          new_dead_vaccinated2_i = new_dead_vac,
                           new_vaccinated_i = new_vaccinated,
                           total_vaccinated1_i = total_vaccinated1,
                           total_vaccinated2_i = total_vaccinated2,
