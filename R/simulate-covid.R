@@ -93,8 +93,7 @@ simulate_covid <- function(
   run_simulations = 1,
   stagger_simulations = 0,
   scenario = "1",
-  quiet = n_population < 100e3,
-  error_check = TRUE
+  quiet = n_population < 100e3
 ) {
 
   vac_transmission_rate <- 1 - vac_transmission_reduction
