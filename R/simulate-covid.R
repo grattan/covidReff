@@ -97,6 +97,7 @@ simulate_covid <- function(
   error_check = TRUE
 ) {
 
+  quiet <- isTRUE(quiet)
   vac_transmission_rate <- 1 - vac_transmission_reduction
 
   # get Australia population
@@ -107,10 +108,9 @@ simulate_covid <- function(
   # function to estimate the Reff once (split this out)
   simulate_covid_run <- function(runid) {
 
-
-    message(notebold("Scenario", scenario, "\t|\trun", runid))
-
-
+    if (!quiet) {
+      message(notebold("Scenario", scenario, "\t|\trun", runid))
+    }
     aus <- base_aus
 
     n_population <- nrow(aus)
