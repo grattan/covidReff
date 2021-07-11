@@ -293,10 +293,10 @@ simulate_covid <- function(
       n_infected_and_vaccinated <- aus[, sum(newly_infected & vaccine_dose == 2L)]
       n_infected_and_unvaccinated <- aus[, sum(newly_infected & vaccine_dose < 2L)]
 
-      # Number of infected due R,
+      # n_maybe_infected is the number of infected due to R and
       # differing rates of infection-spread among vacc/not vacc,
-      # but ignoring vaccination protection. 
-      # (i.e. we take into account whether or not
+      # but not vaccination protection. 
+      # (i.e. here we take into account whether or not
       #  a vaccinated person is less likely to cough, 
       #  but not whether the person
       #  they cough on is endowed with greater protection
