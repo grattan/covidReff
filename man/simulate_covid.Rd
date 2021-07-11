@@ -57,7 +57,6 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.}
 \item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}
 \item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.}
-\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
 \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 \item{\code{in_R}}{Input \code{R} value.}
