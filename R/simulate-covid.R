@@ -119,7 +119,7 @@ simulate_covid <- function(
                                  levels = vaccine_names)] %>%
       .[, vaccine_dose := 0L] %>%
       # fully vaccinated start:
-      .[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
+      .[, is_vaccinated := dqrunif(.N) <= .get_vaccination_level(age,
                                                                vaccination_levels)] %>%
 
       # if fully vaccinated, what vaccine?
@@ -167,11 +167,19 @@ simulate_covid <- function(
 
     # set
     aus[start_first_dose == TRUE,
-      days_since_first_dose := round(runif(.N,
-                                           min = 1,
-                                           max = fifelse(vaccine_type == "pf",
-                                                         pf_1_second_dose_wait_days,
-                                                         az_1_second_dose_wait_days)))]
+      # days_since_first_dose := round(runif(.N,
+      #                                      min = 1,
+      #                                      max = fifelse(vaccine_type == "pf",
+      #                                                    pf_1_second_dose_wait_days,
+      #                                                    az_1_second_dose_wait_days)))]
+      days_since_first_dose := dqrng::dqsample.int(if (.BY[[1]] == "pf") {
+        pf_1_second_dose_wait_days
+      } else {
+        az_1_second_dose_wait_days
+      },
+      size = .N,
+      replace = TRUE),
+      by = "vaccine_type"]
 
 
 
@@ -319,7 +327,7 @@ simulate_covid <- function(
             # # if contact but already infected: can't be infected
               is_infected == TRUE, FALSE,
               # if contact and vaccinated, does vaccination protect?
-              vaccine_dose > 0L, runif(.N) > vaccine_protection,
+              vaccine_dose > 0L, dqrunif(.N) > vaccine_protection,
               # if contact and not vaccinated, infected:
               vaccine_dose == 0L, TRUE)] %>%
         .[, is_infected := newly_infected | is_infected]
@@ -328,10 +336,10 @@ simulate_covid <- function(
       # who will die?
 
       aus[newly_infected == TRUE,
-          is_hosp := runif(.N) < covid_age_hospitalisation_prob(age, vaccine_type, vaccine_dose)]
+          is_hosp := dqrunif(.N) < covid_age_hospitalisation_prob(age, vaccine_type, vaccine_dose)]
 
       aus[newly_infected == TRUE,
-          is_dead := runif(.N) < covid_age_death_prob(age, vaccine_type, vaccine_dose,
+          is_dead := dqrunif(.N) < covid_age_death_prob(age, vaccine_type, vaccine_dose,
                                                       .treatment_improvement = treatment_death_reduction)]
 
 

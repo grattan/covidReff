@@ -17,6 +17,7 @@ Imports:
     purrr,
     tidyr,
     data.table,
+    dqrng,
     magrittr,
     tibble,
     scales,

@@ -14,6 +14,7 @@
 #' @importFrom dplyr summarise
 #' @importFrom dplyr pull
 #' @importFrom dplyr starts_with
+#' @importFrom dqrng dqrunif
 #' @importFrom magrittr %>%
 #' @importFrom purrr map_dfr
 #' @importFrom tibble tibble
