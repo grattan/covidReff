@@ -49,10 +49,10 @@ stagger <- simulate_covid(
 test_that("simulation returns sensible results", {
 
   # reff
-  expect_equal(max(zero_vac_sim_R5$rt_i, na.rm = TRUE), 5)
+  expect_equal(max(zero_vac_sim_R5$rt_i[[2]], na.rm = TRUE), 5)
   expect_lt(high_vac_sim_R5$rt_i[2], 2)
   expect_equal(nrow(zero_vac_sim_R5), 2 + 1)
-  expect_equal(ncol(zero_vac_sim_R5), 23)
+  expect_equal(ncol(zero_vac_sim_R5), 26)
   expect_equal(zero_vac_sim_R5$new_cases_i[1], 5)
 })
 

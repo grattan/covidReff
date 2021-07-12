@@ -53,7 +53,7 @@
 
 globalVariables(c("age", "day", "is_dead", "is_hosp", "is_infected",
                   "is_vaccinated", "new_vaccinated_i", "iteration", "maybe_infected",
-                  "new_cases_i", "new_dead_i", "new_hosp_i", "newly_infected", "new_first_dose",
+                  "new_cases_i", "new_local_cases_i", "new_dead_i", "new_hosp_i", "newly_infected", "new_first_dose",
                   "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose",
                   "days_since_first_dose", "start_first_dose", "vaccine_protection"))
 
@@ -89,6 +89,7 @@ simulate_covid <- function(
   treatment_death_reduction = 0.2,
   n_population = 2e5,
   n_start_infected = 10,
+  n_daily_introductions = 1,
   n_iterations =  3,
   run_simulations = 1,
   stagger_simulations = 0,
@@ -202,8 +203,11 @@ simulate_covid <- function(
     start_conditions <- tibble(
       iteration = 0L,
       new_cases_i = n_start_infected,
+      new_local_cases_i = n_start_infected,
+      new_os_cases_i = 0L,
       new_cases_vaccinated2_i = n_start_infected_vaccinated,
       new_hosp_i  = 0,
+      new_hosp_vaccinated2_i  = 0,
       new_dead_i  = 0,
       new_dead_vaccinated2_i  = 0,
       new_vaccinated_i = round(p_start_vaccinated * n_population))
@@ -216,6 +220,7 @@ simulate_covid <- function(
       pop_vaccinated,
       vaccination_growth_factor)
 
+    n_iteration_introductions <- n_daily_introductions * serial_interval
 
 
     # loop over iterations -----------
@@ -281,7 +286,7 @@ simulate_covid <- function(
       }
 
       # INFECTIONS -------------------------------------------------------------
-      # how many new infected:
+      # how many newly infected in the community last iteration:
       n_infected_and_vaccinated <- aus[, sum(newly_infected & vaccine_dose == 2L)]
       n_infected_and_unvaccinated <- aus[, sum(newly_infected & vaccine_dose < 2L)]
 
@@ -295,16 +300,20 @@ simulate_covid <- function(
         if (zero_count == 3) break else next
       }
 
-      # put new people in contact with covid:
-      aus[, maybe_infected := FALSE] %>%
-        .[newly_infected == FALSE,
+      # reset maybe infected
+      aus[, maybe_infected := FALSE]
+
+      # introduce n_iteration_introductions cases into the community;
+      # with at least some vaccination protection (as a border requirement)
+      aus[is_infected == FALSE & vaccine_dose >= 1L,
+          newly_infected == .sample_fixed_TRUE(.N, n_iteration_introductions)]
+
+      # put new people in contact with Covid:
+      aus[newly_infected == FALSE,
           maybe_infected := .sample_fixed_TRUE(.N, n_maybe_infected)]
 
-      # reset newly infected
-      aus[,
-          newly_infected := FALSE]
 
-      # if maybe infected: zero chance if previously infected; lower chance if vaccinated
+      # if maybe infected and vaccinated, what vaccine protection?
       aus[maybe_infected == TRUE,
           vaccine_protection := fcase(
             vaccine_type == "pf" & vaccine_dose == 1L, pf_1_poh,
@@ -314,7 +323,8 @@ simulate_covid <- function(
             vaccine_type == "none", 0
           )]
 
-      aus[maybe_infected == TRUE,
+      # if maybe infected: zero chance if previously infected; lower chance if vaccinated
+      aus[maybe_infected == TRUE & newly_infected == FALSE,
             newly_infected := fcase(
             # # if contact but already infected: can't be infected
               is_infected == TRUE, FALSE,
@@ -324,9 +334,7 @@ simulate_covid <- function(
               vaccine_dose == 0L, TRUE)] %>%
         .[, is_infected := newly_infected | is_infected]
 
-      # Of the people who become infected, who requires hospitalisation, and
-      # who will die?
-
+      # Of the people who become infected, who requires hospitalisation, and who will die?
       aus[newly_infected == TRUE,
           is_hosp := runif(.N) < covid_age_hospitalisation_prob(age, vaccine_type, vaccine_dose)]
 
@@ -334,15 +342,17 @@ simulate_covid <- function(
           is_dead := runif(.N) < covid_age_death_prob(age, vaccine_type, vaccine_dose,
                                                       .treatment_improvement = treatment_death_reduction)]
 
-
       # generate summary of new cases ---
       newly <- aus[newly_infected == TRUE]
 
       new_cases <- newly[, .N]
+      new_os_cases <- n_iteration_introductions
+      new_local_cases <- new_cases - n_iteration_introductions
       new_hosp <- newly[, sum(is_hosp)]
+      new_hosp_vac <- newly[vaccine_dose == 2L, sum(is_hosp)]
       new_dead <- newly[, sum(is_dead)]
-      new_cases_vac <- newly[vaccine_dose == 2L, .N]
       new_dead_vac <- newly[vaccine_dose == 2L, sum(is_dead)]
+      new_cases_vac <- newly[vaccine_dose == 2L, .N]
       new_vaccinated <- aus[, sum(new_first_dose)]
       total_vaccinated1 <- aus[vaccine_dose == 1L, .N]
       total_vaccinated2 <- aus[vaccine_dose == 2L, .N]
@@ -353,12 +363,15 @@ simulate_covid <- function(
         message(note$underline("\nIteration: ", t, " ( day ", day_count, ")\t\t\t"))
         message(good("\tVaccination rate, dose 1: ", scales::percent(current_vac_rate, 0.1)))
         message(good("\tVaccination rate, dose 2: ", scales::percent(current_vac2_rate, 0.1)))
-        message(note("\tMaybe infected:    \t", scales::comma(n_maybe_infected)))
-        message(note("\tNew cases:         \t", scales::comma(new_cases),
-                     "(", scales::percent(new_cases/n_maybe_infected, 0.1), " of maybe infected)"))
+        message(note("\tMaybe infected:           ", scales::comma(n_maybe_infected)))
+        message(note("\tNew local cases:          ", scales::comma(new_local_cases),
+                     "(", scales::percent(new_local_cases/n_maybe_infected, 0.1), " of maybe infected)"))
+        message(note("\tNew overseas cases:         \t", scales::comma(new_os_cases)))
         message(note("\tNew cases fully vaccinated:", scales::comma(new_cases_vac), "/", scales::percent(new_cases_vac/new_cases)))
-        message(bad("\tNew hospitalisated: \t", scales::comma(new_hosp)))
-        message(bad("\tNew dead:           \t", scales::comma(new_dead)))
+        message(bad("\tNew hospitalisated: \t", scales::comma(new_hosp)), "\n",
+                "\t\t", scales::percent(new_hosp_vac / new_hosp), " were fully vaccinated")
+        message(bad("\tNew dead:           \t", scales::comma(new_dead)),
+                "\t\t", scales::percent(new_dead_vac / new_dead), " were fully vaccinated")
         message(good("\tNew vaccinated:    \t", scales::comma(new_vaccinated)))
         message(good("\tTotal first dose:  \t", scales::comma(total_vaccinated1)))
         message(good("\tTotal second dose: \t", scales::comma(total_vaccinated2)))
@@ -369,8 +382,11 @@ simulate_covid <- function(
       add_cases <- tibble(iteration = t,
                           new_maybe_infected_i = n_maybe_infected,
                           new_cases_i = new_cases,
+                          new_local_cases_i = new_local_cases,
+                          new_os_cases_i = new_os_cases,
                           new_cases_vaccinated2_i = new_cases_vac,
                           new_hosp_i = new_hosp,
+                          new_hosp_vaccinated2_i = new_hosp_vac,
                           new_dead_i = new_dead,
                           new_dead_vaccinated2_i = new_dead_vac,
                           new_vaccinated_i = new_vaccinated,
@@ -420,7 +436,7 @@ simulate_covid <- function(
            total_hosp_i = cumsum(new_hosp_i),
            total_dead_i = cumsum(new_dead_i),
            total_vaccinated_i = cumsum(new_vaccinated_i),
-           rt_i = new_cases_i / lag(new_cases_i),
+           rt_i = new_local_cases_i / lag(new_cases_i), # exclude OS infections from denominator
            scenario = scenario) %>%
     relocate(scenario, runid, iteration, day, starts_with("new"), starts_with("total")) %>%
     mutate(in_R = R,
