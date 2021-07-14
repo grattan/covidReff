@@ -302,8 +302,6 @@ simulate_covid <- function(
 
       # introduce n_iteration_introductions cases into the community;
       # with at least some vaccination protection (as a border requirement)
-      aus[is_infected == FALSE & vaccine_dose >= 1L,
-          newly_infected == .sample_fixed_TRUE(.N, n_iteration_introductions)]
 
       # put other people in contact with Covid:
       aus[newly_infected == FALSE,
@@ -329,6 +327,9 @@ simulate_covid <- function(
               vaccine_dose > 0L, runif(.N) > vaccine_protection,
               # if contact and not vaccinated, infected:
               vaccine_dose == 0L, TRUE)] %>%
+        # add overseas cases
+        .[maybe_infected == FALSE & is_infected == FALSE & vaccine_dose >= 1L,
+          newly_infected := .sample_fixed_TRUE(.N, n_iteration_introductions)] %>%
         .[, is_infected := newly_infected | is_infected]
 
       # Of the people who become infected, who requires hospitalisation, and who will die?
@@ -363,12 +364,12 @@ simulate_covid <- function(
         message(note("\tMaybe infected:           ", scales::comma(n_maybe_infected)))
         message(note("\tNew local cases:          ", scales::comma(new_local_cases),
                      "(", scales::percent(new_local_cases/n_maybe_infected, 0.1), " of maybe infected)"))
-        message(note("\tNew overseas cases:         \t", scales::comma(new_os_cases)))
+        message(note("\tNew overseas cases:       ", scales::comma(new_os_cases)))
         message(note("\tNew cases fully vaccinated:", scales::comma(new_cases_vac), "/", scales::percent(new_cases_vac/new_cases)))
-        message(bad("\tNew hospitalisated: \t", scales::comma(new_hosp)), "\n",
-                "\t\t", scales::percent(new_hosp_vac / new_hosp), " were fully vaccinated")
-        message(bad("\tNew dead:           \t", scales::comma(new_dead)),
-                "\t\t", scales::percent(new_dead_vac / new_dead), " were fully vaccinated")
+        message(bad("\tNew hospitalisated: \t", scales::comma(new_hosp),
+                "\t\t", scales::percent(new_hosp_vac / new_hosp), " were fully vaccinated"))
+        message(bad("\tNew dead:           \t", scales::comma(new_dead),
+                "\t\t", scales::percent(new_dead_vac / new_dead), " were fully vaccinated"))
         message(good("\tNew vaccinated:    \t", scales::comma(new_vaccinated)))
         message(good("\tTotal first dose:  \t", scales::comma(total_vaccinated1)))
         message(good("\tTotal second dose: \t", scales::comma(total_vaccinated2)))
