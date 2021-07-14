@@ -279,10 +279,6 @@ simulate_covid <- function(
           .[new_first_dose == TRUE,
             is_vaccinated == TRUE]
 
-        # is the vaccination happening AFTER a person has already been infected?
-        aus[is_infected == TRUE & new_first_dose == TRUE,
-            vaccinated_after_infection := TRUE]
-
       }
 
       # INFECTIONS -------------------------------------------------------------
@@ -300,15 +296,16 @@ simulate_covid <- function(
         if (zero_count == 3) break else next
       }
 
-      # reset maybe infected
-      aus[, maybe_infected := FALSE]
+      # reset maybe infected and newly infected
+      aus[, maybe_infected := FALSE] %>%
+        .[, newly_infected := FALSE]
 
       # introduce n_iteration_introductions cases into the community;
       # with at least some vaccination protection (as a border requirement)
       aus[is_infected == FALSE & vaccine_dose >= 1L,
           newly_infected == .sample_fixed_TRUE(.N, n_iteration_introductions)]
 
-      # put new people in contact with Covid:
+      # put other people in contact with Covid:
       aus[newly_infected == FALSE,
           maybe_infected := .sample_fixed_TRUE(.N, n_maybe_infected)]
 
