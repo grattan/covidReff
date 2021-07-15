@@ -17,10 +17,13 @@ Imports:
     purrr,
     tidyr,
     data.table,
+    dqrng,
     magrittr,
     tibble,
     scales,
     crayon
 Suggests: 
-    testthat
+    testthat,
+    stats,
+    withr
 RoxygenNote: 7.1.1

@@ -15,7 +15,7 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.}
 
-\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of}
+\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the default), or a mix of Pfizer and AstraZeneca?}
 
 \item{over60_az_share}{The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
 
@@ -57,7 +57,6 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.}
 \item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}
 \item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.}
-\item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
 \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 \item{\code{in_R}}{Input \code{R} value.}

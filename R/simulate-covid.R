@@ -12,7 +12,7 @@
 #' @param vaccination_levels Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}
 #' @param vaccination_growth_factor Defines how quickly additional people are vaccinated after opening, defaulting to 0.01. This is the growth parameter (\code{c}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
 #' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
-#' @param only_pfizer_after_opening When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of
+#' @param only_pfizer_after_opening When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the default), or a mix of Pfizer and AstraZeneca?
 #' @param over60_az_share   The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
 #' @param under60_az_share  The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
 #' @param vac_transmission_reduction The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.
@@ -41,7 +41,6 @@
 #' \item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.}
 #' \item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}
 #' \item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.}
-#' \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 #' \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}
 #' \item{\code{in_population}}{Input population in the simulation, equal to the \code{n_population}.}
 #' \item{\code{in_R}}{Input \code{R} value.}
@@ -97,6 +96,7 @@ simulate_covid <- function(
   error_check = TRUE
 ) {
 
+  quiet <- isTRUE(quiet)
   vac_transmission_rate <- 1 - vac_transmission_reduction
 
   # get Australia population
@@ -107,10 +107,9 @@ simulate_covid <- function(
   # function to estimate the Reff once (split this out)
   simulate_covid_run <- function(runid) {
 
-
-    message(notebold("Scenario", scenario, "\t|\trun", runid))
-
-
+    if (!quiet) {
+      message(notebold("Scenario", scenario, "\t|\trun", runid))
+    }
     aus <- base_aus
 
     n_population <- nrow(aus)
@@ -120,7 +119,7 @@ simulate_covid <- function(
                                  levels = vaccine_names)] %>%
       .[, vaccine_dose := 0L] %>%
       # fully vaccinated start:
-      .[, is_vaccinated := runif(.N) <= .get_vaccination_level(age,
+      .[, is_vaccinated := dqrunif(.N) <= .get_vaccination_level(age,
                                                                vaccination_levels)] %>%
 
       # if fully vaccinated, what vaccine?
@@ -168,11 +167,19 @@ simulate_covid <- function(
 
     # set
     aus[start_first_dose == TRUE,
-      days_since_first_dose := round(runif(.N,
-                                           min = 1,
-                                           max = fifelse(vaccine_type == "pf",
-                                                         pf_1_second_dose_wait_days,
-                                                         az_1_second_dose_wait_days)))]
+      # days_since_first_dose := round(runif(.N,
+      #                                      min = 1,
+      #                                      max = fifelse(vaccine_type == "pf",
+      #                                                    pf_1_second_dose_wait_days,
+      #                                                    az_1_second_dose_wait_days)))]
+      days_since_first_dose := dqrng::dqsample.int(if (.BY[[1]] == "pf") {
+        pf_1_second_dose_wait_days
+      } else {
+        az_1_second_dose_wait_days
+      },
+      size = .N,
+      replace = TRUE),
+      by = "vaccine_type"]
 
 
 
@@ -286,7 +293,14 @@ simulate_covid <- function(
       n_infected_and_vaccinated <- aus[, sum(newly_infected & vaccine_dose == 2L)]
       n_infected_and_unvaccinated <- aus[, sum(newly_infected & vaccine_dose < 2L)]
 
-      # Number of infected due to transmission and R but not infection
+      # n_maybe_infected is the number of infected due to R and
+      # differing rates of infection-spread among vacc/not vacc,
+      # but not vaccination protection. 
+      # (i.e. here we take into account whether or not
+      #  a vaccinated person is less likely to cough, 
+      #  but not whether the person
+      #  they cough on is endowed with greater protection
+      #  from infection because they are vaccinated)
       n_maybe_infected <- n_infected_and_vaccinated * R * vac_transmission_rate +
                            n_infected_and_unvaccinated * R
       n_maybe_infected <- as.integer(n_maybe_infected)
@@ -320,7 +334,7 @@ simulate_covid <- function(
             # # if contact but already infected: can't be infected
               is_infected == TRUE, FALSE,
               # if contact and vaccinated, does vaccination protect?
-              vaccine_dose > 0L, runif(.N) > vaccine_protection,
+              vaccine_dose > 0L, dqrunif(.N) > vaccine_protection,
               # if contact and not vaccinated, infected:
               vaccine_dose == 0L, TRUE)] %>%
         .[, is_infected := newly_infected | is_infected]
@@ -329,10 +343,10 @@ simulate_covid <- function(
       # who will die?
 
       aus[newly_infected == TRUE,
-          is_hosp := runif(.N) < covid_age_hospitalisation_prob(age, vaccine_type, vaccine_dose)]
+          is_hosp := dqrunif(.N) < covid_age_hospitalisation_prob(age, vaccine_type, vaccine_dose)]
 
       aus[newly_infected == TRUE,
-          is_dead := runif(.N) < covid_age_death_prob(age, vaccine_type, vaccine_dose,
+          is_dead := dqrunif(.N) < covid_age_death_prob(age, vaccine_type, vaccine_dose,
                                                       .treatment_improvement = treatment_death_reduction)]
 
 

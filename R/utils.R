@@ -40,8 +40,8 @@
     return(rep(FALSE, n))
   }
 
-  out <- sample(rep(c(FALSE, TRUE),
-                    c(nFALSE, nTRUE)))
+  out <- dqrng::dqsample(rep(c(FALSE, TRUE),
+                             c(nFALSE, nTRUE)))
 
   out
 }
