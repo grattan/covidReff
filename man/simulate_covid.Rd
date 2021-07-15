@@ -15,7 +15,7 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.}
 
-\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of}
+\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the default), or a mix of Pfizer and AstraZeneca?}
 
 \item{over60_az_share}{The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
 
