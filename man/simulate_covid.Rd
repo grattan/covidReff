@@ -11,11 +11,11 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{vaccination_levels}{Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}}
 
-\item{vaccination_growth_factor}{Defines how quickly additional people are vaccinated after opening, defaulting to 0.01. This is the growth parameter (\code{c}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.}
+\item{vaccination_growth_steepness}{Defines how quickly additional people are vaccinated after opening, defaulting to 0.01. This is the growth parameter (\code{c}) in the logistic curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.}
 
-\item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logisitc curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.}
+\item{p_max_vaccinated}{Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logistic curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.}
 
-\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the default), or a mix of Pfizer and AstraZeneca?}
+\item{only_pfizer_after_opening}{When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of}
 
 \item{over60_az_share}{The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
 
@@ -23,21 +23,19 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{vac_transmission_reduction}{The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.}
 
-\item{hospitalisation_per_death}{Average number of hospitalisations for each death that occurs. A single numeric with default 20.}
-
 \item{death_rate}{The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.}
 
 \item{treatment_death_reduction}{The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.}
 
 \item{n_population}{Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).}
 
-\item{n_start_infected}{The number of people infected at the beginning of the simulation. Defaults to 100 people infected at day 0.}
+\item{n_start_infected}{The number of people infected at the beginning of the simulation. A numeric defaulting to 100 people infected at day 0.}
+
+\item{n_daily_introductions}{The number of new external infections introduced each day. A numeric defaulting to 1.}
 
 \item{n_iterations}{Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.}
 
 \item{run_simulations}{The number of times the simulation is run. A single integer defaulting to  1L.}
-
-\item{stagger_simulations}{Sets the number of days each run in \code{run_simulations} is separated by. A single numeric defaulting to 0. A value of e.g. 7 would start the first run at day 0, the second at day 7, the third at day 14, etc. This can be used to simulate the introduction of infections to independent groups progressively over time.}
 
 \item{scenario}{Name of the scenario. Defaults to "1". This is useful when using \code{purrr::map} or \code{lapply} over a number of scenarios.}
 }
@@ -50,11 +48,9 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{day}}{Days since beginning of simulation, where \code{day = iteration * serial_iterval}.}
 \item{\code{new_maybe_infected_i}}{the number of new possible Covid cases in iteration \code{i} (interpreted as contacts that would become cases without vaccines).}
 \item{\code{new_cases_i}}{the number of new Covid cases in iteration \code{i}.}
-\item{\code{new_hosp_i}}{the number of new Covid hospitalisations in iteration \code{i}.}
 \item{\code{new_dead_i}}{the number of new Covid dead in iteration \code{i}.}
 \item{\code{new_vaccinated_i}}{the number of new people fully vaccinated in iteration \code{i}.}
 \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
-\item{\code{total_hosp_i}}{the cumulative number of Covid hosp after iteration \code{i}.}
 \item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}
 \item{\code{total_vaccinations_i}}{the cumulative number of Covid vaccinations after iteration \code{i}.}
 \item{\code{rt_i}}{The average number of new infections in this iteration cased by a case in the previous iteration.Derived with \code{rt_i = new_cases_i / lag(new_cases_i)}.}

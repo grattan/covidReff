@@ -24,5 +24,4 @@ test_that("100x increase in population causes 100x vaccinated numbers but not ca
     expect_gte(conf.cases["total_vaccinated1_i.x", 1], 90)
     expect_lte(conf.cases["total_vaccinated1_i.x", 2], 110)
   })
-})
 
