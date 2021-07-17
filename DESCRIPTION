@@ -25,7 +25,7 @@ Imports:
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
     stats,
     withr
 RoxygenNote: 7.1.1
