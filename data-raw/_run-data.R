@@ -2,7 +2,7 @@
 library(tidyverse)
 
 # Make data
-list.files("data-raw", full.names = TRUE) %>%
+list.files("data-raw", pattern = "\\.R", full.names = TRUE) %>%
   .[!str_detect(., "_run-data")] %>%
   purrr::walk(source)
 
@@ -26,6 +26,7 @@ usethis::use_data(
     none_0_poh,
     none_0_pod,
     none_0_second_dose_wait_days,
+    hospital_rates,
     vaccine_names,
     auspop,
   internal = TRUE,

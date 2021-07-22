@@ -4,12 +4,14 @@
 covid_age_hospitalisation_prob <- function(.age,
                                            .vaccine,
                                            .dose,
-                                           .hospitalisation_per_death = 20,
-                                           .max_hospitalisation_rate = 0.90) {
+                                           type = c("hosp_rate", "icu_rate")) {
 
-  hr <- covid_age_death_prob(.age, .vaccine = "none") * .hospitalisation_per_death
+  age10 <- floor(.age/10) + 1
+  type <- type[1]
 
-  hr <- if_else(hr > .max_hospitalisation_rate, .max_hospitalisation_rate, hr)
+  # unvaccinated hospital rate based on the 2020-21 Australian data from
+  # National Notifiable Diseases Surveillance System (2021)
+  hr <- hospital_rates[[type]][age10]
 
   # add vaccine protection
   .vac_hospitalisation_reduction <- fcase(
@@ -20,7 +22,9 @@ covid_age_hospitalisation_prob <- function(.age,
     .vaccine == "none", 0
   )
 
-  hr <- hr * (1 - .vac_hospitalisation_reduction)
+  .vac_poi <- get_vaccine_poi(.vaccine, .dose)
+
+  hr <- hr * (1 - .vac_hospitalisation_reduction) / (1 - .vac_poi)
 
   return(hr)
 }
@@ -31,7 +35,7 @@ covid_age_death_prob <- function(.age,
                                  .vaccine = "none",
                                  .dose = 0,
                                  .treatment_improvement = 0.2,
-                                 .max_death_rate = 0.28 # 90-year-old death rate as per Gideon
+                                 .max_death_rate = 0.40 # max death rate from Australian experience
 ) {
 
   age <- as.numeric(.age)
@@ -54,17 +58,21 @@ covid_age_death_prob <- function(.age,
       .vaccine == "none", 0
     )
 
-  # and subtract poi
-  .vac_poi <- fcase(
+  .vac_poi <- get_vaccine_poi(.vaccine, .dose)
+
+  ifr <- ifr * (1 - .vac_death_reduction) / (1 - .vac_poi)
+
+  return(ifr)
+
+}
+
+
+get_vaccine_poi <- function(.vaccine, .dose) {
+  fcase(
     .vaccine == "pf" & .dose == 1L, pf_1_poi,
     .vaccine == "pf" & .dose == 2L, pf_2_poi,
     .vaccine == "az" & .dose == 1L, az_1_poi,
     .vaccine == "az" & .dose == 2L, az_2_poi,
     .vaccine == "none", 0
   )
-
-  ifr <- ifr * (1 - .vac_death_reduction) / (1 - .vac_poi)
-
-  return(ifr)
-
 }
