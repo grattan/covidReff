@@ -54,7 +54,16 @@ covid_age_death_prob <- function(.age,
       .vaccine == "none", 0
     )
 
-  ifr <- ifr * (1 - .vac_death_reduction)
+  # and subtract poi
+  .vac_poi <- fcase(
+    .vaccine == "pf" & .dose == 1L, pf_1_poi,
+    .vaccine == "pf" & .dose == 2L, pf_2_poi,
+    .vaccine == "az" & .dose == 1L, az_1_poi,
+    .vaccine == "az" & .dose == 2L, az_2_poi,
+    .vaccine == "none", 0
+  )
+
+  ifr <- ifr * (1 - .vac_death_reduction) / (1 - .vac_poi)
 
   return(ifr)
 
