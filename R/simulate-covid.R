@@ -33,7 +33,15 @@
 #' \item{\code{day}}{Days since beginning of simulation, where \code{day = iteration * serial_iterval}.}
 #' \item{\code{new_maybe_infected_i}}{the number of new possible Covid cases in iteration \code{i} (interpreted as contacts that would become cases without vaccines).}
 #' \item{\code{new_cases_i}}{the number of new Covid cases in iteration \code{i}.}
+#' \item{\code{new_local_cases_i}}{the number of new local transmission cases in iteration \code{i}.}
+#' \item{\code{new_os_cases_i}}{the number of new overseas/external cases introduced in iteration \code{i}.}
+#' \item{\code{new_cases_vaccinated2_i}}{the number of new cases that were fully vaccinated in iteration \code{i}.}
+#' \item{\code{new_hosp_i}}{the number of new cases hospitalised in iteration \code{i}.}
+#' \item{\code{current_hosp_i}}{current hospital demand in iteration \code{i}.}
+#' \item{\code{new_icu_i}}{the number of new cases requiring ICU  in iteration \code{i}.}
+#' \item{\code{current_icu_i}}{current ICU demand iteration \code{i}.}
 #' \item{\code{new_dead_i}}{the number of new Covid dead in iteration \code{i}.}
+#' \item{\code{new_dead_vaccinated2_i}}{the number of new dead who were fully vaccinated in iteration \code{i}.}
 #' \item{\code{new_vaccinated_i}}{the number of new people fully vaccinated in iteration \code{i}.}
 #' \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 #' \item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}
@@ -50,6 +58,7 @@
 globalVariables(c("age", "day", "is_dead", "is_infected",
                   "is_vaccinated", "new_vaccinated_i", "iteration", "maybe_infected",
                   "new_cases_i", "new_local_cases_i", "new_dead_i", "newly_infected", "new_first_dose",
+                  "is_hosp", "is_icu", "is_ventilation", "hosp_los", "icu_los",
                   "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose",
                   "days_since_first_dose", "start_first_dose", "vaccine_protection"))
 
@@ -348,8 +357,11 @@ simulate_covid <- function(
                                                      .treatment_improvement = treatment_death_reduction)]
 
       new_cases <- newly[, .N]
-      new_os_cases <- n_iteration_introductions
-      new_local_cases <- new_cases - n_iteration_introductions
+
+      # new cases
+      if (t == 1) new_os_cases <- 0
+      if (t != 1) new_os_cases <- n_iteration_introductions
+      new_local_cases <- new_cases - new_os_cases
       new_hosp <- newly[, sum(is_hosp)]
       new_icu <- newly[, sum(is_icu)]
       new_hosp_los <- newly[, sum(hosp_los)]
@@ -362,9 +374,6 @@ simulate_covid <- function(
       total_vaccinated2 <- aus[vaccine_dose == 2L, .N]
       total_pf <- aus[vaccine_type == "pf", .N]
       total_az <- aus[vaccine_type == "az", .N]
-
-      print(new_hosp)
-      print(new_icu)
 
       if (!quiet) {
         message(note$underline("\nIteration: ", t, " ( day ", day_count, ")\t\t\t"))

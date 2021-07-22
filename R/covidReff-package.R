@@ -23,6 +23,7 @@
 #' @importFrom scales percent
 #' @importFrom stats weighted.mean
 #' @importFrom stats runif
+#' @importFrom stats rlnorm
 #' @import crayon
 
 

@@ -19,7 +19,7 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{over60_az_share}{The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
 
-\item{under60_az_share}{The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
+\item{under60_az_share}{The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.20. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.}
 
 \item{vac_transmission_reduction}{The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.}
 
@@ -48,7 +48,15 @@ A \code{tibble} object with one row per scenario, simulation and iteration. For 
 \item{\code{day}}{Days since beginning of simulation, where \code{day = iteration * serial_iterval}.}
 \item{\code{new_maybe_infected_i}}{the number of new possible Covid cases in iteration \code{i} (interpreted as contacts that would become cases without vaccines).}
 \item{\code{new_cases_i}}{the number of new Covid cases in iteration \code{i}.}
+\item{\code{new_local_cases_i}}{the number of new local transmission cases in iteration \code{i}.}
+\item{\code{new_os_cases_i}}{the number of new overseas/external cases introduced in iteration \code{i}.}
+\item{\code{new_cases_vaccinated2_i}}{the number of new cases that were fully vaccinated in iteration \code{i}.}
+\item{\code{new_hosp_i}}{the number of new cases hospitalised in iteration \code{i}.}
+\item{\code{current_hosp_i}}{current hospital demand in iteration \code{i}.}
+\item{\code{new_icu_i}}{the number of new cases requiring ICU  in iteration \code{i}.}
+\item{\code{current_icu_i}}{current ICU demand iteration \code{i}.}
 \item{\code{new_dead_i}}{the number of new Covid dead in iteration \code{i}.}
+\item{\code{new_dead_vaccinated2_i}}{the number of new dead who were fully vaccinated in iteration \code{i}.}
 \item{\code{new_vaccinated_i}}{the number of new people fully vaccinated in iteration \code{i}.}
 \item{\code{total_cases_i}}{the cumulative number of Covid cases after iteration \code{i}.}
 \item{\code{total_dead_i}}{the cumulative number of Covid dead after iteration \code{i}.}

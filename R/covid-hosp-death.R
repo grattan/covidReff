@@ -19,6 +19,8 @@ get_covid_hospitalisation <- function(.age,
                                       .dose = 0,
                                       type = c("hosp_rate", "icu_rate")) {
 
+  .age <- if_else(.age == 100, 99, .age)
+
   age10 <- floor(.age/10) + 1
   type <- type[1]
 

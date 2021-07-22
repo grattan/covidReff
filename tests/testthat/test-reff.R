@@ -42,9 +42,9 @@ test_that("simulation returns sensible results", {
 
   # reff
   expect_equal(max(zero_vac_sim_R5$rt_i[[2]], na.rm = TRUE), 5)
-  expect_lt(high_vac_sim_R5$rt_i[2], 2)
+  expect_lt(high_vac_sim_R5$rt_i[3], 2)
   expect_equal(nrow(zero_vac_sim_R5), 2 + 1)
-  expect_equal(ncol(zero_vac_sim_R5), 26)
+  expect_equal(ncol(zero_vac_sim_R5), 27)
   expect_equal(zero_vac_sim_R5$new_cases_i[1], 5)
 })
 
@@ -73,21 +73,26 @@ test_that("get population rate works", {
 })
 
 
-test_that("death probabilities are as expected", {
+test_that("hospital and death probabilities are as expected", {
 
-  expect_equal(
-    covid_age_death_prob(100,
-                         .treatment_improvement = 0,
-                         .max_death_rate = 0.28),
-    0.28
-  )
+  expect_equal(get_covid_hospitalisation(60, .vaccine = "none", .dose = 0),
+               0.221)
 
-  expect_equal(
-    covid_age_death_prob(100,
-                         .treatment_improvement = 0.2,
-                         .max_death_rate = 0.28),
-    0.224
-  )
+  expect_equal(get_covid_hospitalisation(60, .vaccine = "pf", .dose = 2),
+               0.221 * (1 - pf_2_poh) / (1 - pf_2_poi))
+
+  expect_equal(get_covid_hospitalisation(80, .vaccine = "none", .dose = 0, type = "icu_rate"),
+               0.027)
+
+  expect_equal(get_covid_hospitalisation(80, .vaccine = "az", .dose = 2, type = "icu_rate"),
+               0.027 * (1 - az_2_poh) / (1 - az_2_poi))
+
+  expect_lt(get_covid_death(90, .vaccine = "az", .dose = 2, .treatment_improvement = 0.2),
+            0.006)
+
+  expect_lt(get_covid_death(90, .vaccine = "pf", .dose = 2),
+            get_covid_death(90, .vaccine = "pf", .dose = 1))
+
 
 })
 
