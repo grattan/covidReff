@@ -14,7 +14,8 @@
 #' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logistic curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
 #' @param only_pfizer_after_opening When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of
 #' @param over60_az_share   The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
-#' @param under60_az_share  The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.20. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
+#' @param under60_az_share  The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.10. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
+#' @param kids_R_reduction The proportion reduction in transmission of children under the age of 18.
 #' @param vac_transmission_reduction The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.
 #' @param death_rate The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
 #' @param treatment_death_reduction The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.
@@ -59,6 +60,8 @@ globalVariables(c("age", "day", "is_dead", "is_infected",
                   "is_vaccinated", "new_vaccinated_i", "iteration", "maybe_infected",
                   "new_cases_i", "new_local_cases_i", "new_dead_i", "newly_infected", "new_first_dose",
                   "is_hosp", "is_icu", "is_ventilation", "hosp_los", "icu_los",
+                  "hosp_it", "hosp_start", "hosp_end",
+                  "icu_it", "icu_start", "icu_end",
                   "runid", "vaccinated_after_infection", ".", "vaccine_type", "vaccine_dose",
                   "days_since_first_dose", "start_first_dose", "vaccine_protection"))
 
@@ -86,9 +89,10 @@ simulate_covid <- function(
   vaccination_growth_steepness = 0.01,
   only_pfizer_after_opening = TRUE,
   over60_az_share  = 0.80,
-  under60_az_share = 0.20,
+  under60_az_share = 0.10,
   p_max_vaccinated = 0.90,
   vac_transmission_reduction = 0.50,
+  kids_R_reduction = 0.3,
   death_rate = "loglinear",
   treatment_death_reduction = 0.2,
   n_population = 2e5,
@@ -120,12 +124,11 @@ simulate_covid <- function(
 
     # fully vaccinate (some of) the nation
     aus[, vaccine_type := factor("none",
-                                 levels = vaccine_names)] %>%
+                                  levels = vaccine_names)] %>%
       .[, vaccine_dose := 0L] %>%
       # fully vaccinated start:
       .[, is_vaccinated := dqrunif(.N) <= .get_vaccination_level(age,
-                                                               vaccination_levels)] %>%
-
+                                                                 vaccination_levels)] %>%
       # if fully vaccinated, what vaccine?
       .[is_vaccinated == TRUE,
         vaccine_type := .get_vaccination_type(age,
@@ -134,10 +137,10 @@ simulate_covid <- function(
       .[is_vaccinated == TRUE,
         vaccine_dose := 2L]
 
-    # how many should have first dose?
-    pop_vaccinated <- get_population_rate(vaccination_levels)
 
     # how many had first dose vaccines?
+    pop_vaccinated <- get_population_rate(vaccination_levels)
+
     previous_vaccination_rates <- .logistic_curve(
       -pf_1_second_dose_wait_days / serial_interval,
       p_max_vaccinated,
@@ -180,8 +183,6 @@ simulate_covid <- function(
       replace = TRUE),
       by = "vaccine_type"]
 
-
-
     p_start_vaccinated <- aus[, sum(is_vaccinated)] / n_population
 
     # starting infected population more likely to be unvaccinated
@@ -215,7 +216,6 @@ simulate_covid <- function(
       new_dead_vaccinated2_i  = 0,
       new_vaccinated_i = round(p_start_vaccinated * n_population))
 
-    zero_count <- 0
 
     current_vaccination_level <- .logistic_curve(
       0,
@@ -225,6 +225,9 @@ simulate_covid <- function(
 
     n_iteration_introductions <- n_daily_introductions * serial_interval
 
+    hosp_demand <- icu_demand <- NULL
+
+    zero_count <- 0
 
     # loop over iterations -----------
     for (t in seq_len(n_iterations)) {
@@ -284,10 +287,12 @@ simulate_covid <- function(
 
       }
 
-      # INFECTIONS -------------------------------------------------------------
+      # INFECTIONS ----------------------------------------------------------------
       # how many newly infected in the community last iteration:
-      n_infected_and_vaccinated <- aus[, sum(newly_infected & vaccine_dose == 2L)]
-      n_infected_and_unvaccinated <- aus[, sum(newly_infected & vaccine_dose < 2L)]
+      n_infected_and_vaccinated_adults   <- aus[, sum(newly_infected & vaccine_dose >= 1L & age >= 18)]
+      n_infected_and_vaccinated_kids     <- aus[, sum(newly_infected & vaccine_dose >= 1L & age  < 18)]
+      n_infected_and_unvaccinated_adults <- aus[, sum(newly_infected & vaccine_dose <  1L & age >= 18)]
+      n_infected_and_unvaccinated_kids   <- aus[, sum(newly_infected & vaccine_dose <  1L & age  < 18)]
 
       # n_maybe_infected is the number of infected due to R and
       # differing rates of infection-spread among vacc/not vacc,
@@ -297,8 +302,11 @@ simulate_covid <- function(
       #  but not whether the person
       #  they cough on is endowed with greater protection
       #  from infection because they are vaccinated)
-      n_maybe_infected <- n_infected_and_vaccinated * R * vac_transmission_rate +
-                           n_infected_and_unvaccinated * R
+      n_maybe_infected <- n_infected_and_vaccinated_adults * R * vac_transmission_rate +
+                          n_infected_and_vaccinated_kids * R * (1 - kids_R_reduction) * vac_transmission_rate +
+                          n_infected_and_unvaccinated_adults * R +
+                          n_infected_and_unvaccinated_kids * (1 - kids_R_reduction) * R
+
       n_maybe_infected <- as.integer(n_maybe_infected)
 
       if (n_maybe_infected == 0) {
@@ -317,7 +325,6 @@ simulate_covid <- function(
       aus[newly_infected == FALSE,
           maybe_infected := .sample_fixed_TRUE(.N, n_maybe_infected)]
 
-
       # if maybe infected and vaccinated, what vaccine protection?
       aus[maybe_infected == TRUE,
           vaccine_protection := get_vaccine_poi(vaccine_type, vaccine_dose)]
@@ -329,14 +336,16 @@ simulate_covid <- function(
               is_infected == TRUE, FALSE,
               # if contact and vaccinated, does vaccination protect?
               vaccine_dose > 0L, dqrunif(.N) > vaccine_protection,
-              # if contact and not vaccinated, infected:
+              # if contact and not vaccinated kid; infected:
+              vaccine_dose == 0L & age < 18, dqrunif(.N) > kids_R_reduction,
+              # if contact and not vaccinated adult; infected:
               vaccine_dose == 0L, TRUE)] %>%
         # add overseas cases
         .[maybe_infected == FALSE & is_infected == FALSE & vaccine_dose >= 1L,
           newly_infected := .sample_fixed_TRUE(.N, n_iteration_introductions)] %>%
         .[, is_infected := newly_infected | is_infected]
 
-      # generate summary of new cases ---
+      # Generate summary of new cases
       newly <- aus[newly_infected == TRUE]
 
       # Of the people who become infected, who needs hospital, icu, and who dies?
@@ -356,16 +365,14 @@ simulate_covid <- function(
             is_dead := dqrunif(.N) < get_covid_death(age, vaccine_type, vaccine_dose,
                                                      .treatment_improvement = treatment_death_reduction)]
 
-      new_cases <- newly[, .N]
 
-      # new cases
+      # Daily summary stats
+      new_cases <- newly[, .N]
       if (t == 1) new_os_cases <- 0
       if (t != 1) new_os_cases <- n_iteration_introductions
       new_local_cases <- new_cases - new_os_cases
       new_hosp <- newly[, sum(is_hosp)]
       new_icu <- newly[, sum(is_icu)]
-      new_hosp_los <- newly[, sum(hosp_los)]
-      new_icu_los <- newly[, sum(icu_los)]
       new_dead <- newly[, sum(is_dead)]
       new_dead_vac <- newly[vaccine_dose == 2L, sum(is_dead)]
       new_cases_vac <- newly[vaccine_dose == 2L, .N]
@@ -374,6 +381,41 @@ simulate_covid <- function(
       total_vaccinated2 <- aus[vaccine_dose == 2L, .N]
       total_pf <- aus[vaccine_type == "pf", .N]
       total_az <- aus[vaccine_type == "az", .N]
+
+      # hospital capacity
+      if (new_hosp > 0) {
+      hosp <- newly[is_hosp == TRUE] %>%
+        .[, hosp_it := round(hosp_los / serial_interval)] %>%
+        .[, hosp_start := t] %>%
+        .[, hosp_end := t + hosp_it]
+
+      new_hosp_demand <- purrr::map2(hosp$hosp_start,
+                                     hosp$hosp_end,
+                                     seq,
+                                     by = 1) %>%
+        unlist()
+
+      hosp_demand <- c(hosp_demand, new_hosp_demand)
+
+      }
+
+      # ICU capacity
+      if (new_hosp > 0) {
+        icu <- newly[is_icu == TRUE] %>%
+          .[, icu_it := round(icu_los / serial_interval)] %>%
+          .[, icu_start := t] %>%
+          .[, icu_end := t + icu_it]
+
+        new_icu_demand <- purrr::map2(icu$icu_start,
+                                       icu$icu_end,
+                                       seq,
+                                       by = 1) %>%
+          unlist()
+
+        icu_demand <- c(icu_demand, new_icu_demand)
+
+      }
+
 
       if (!quiet) {
         message(note$underline("\nIteration: ", t, " ( day ", day_count, ")\t\t\t"))
@@ -401,9 +443,7 @@ simulate_covid <- function(
                           new_os_cases_i = new_os_cases,
                           new_cases_vaccinated2_i = new_cases_vac,
                           new_hosp_i = new_hosp,
-                          new_hosp_los_i = new_hosp_los,
                           new_icu_i = new_icu,
-                          new_icu_los_i = new_icu_los,
                           new_dead_i = new_dead,
                           new_dead_vaccinated2_i = new_dead_vac,
                           new_vaccinated_i = new_vaccinated,
@@ -432,14 +472,43 @@ simulate_covid <- function(
     } # end day loop
 
 
-    # return all cases summary
-    all_cases %>%
+    # cases summary
+    ret_cases <- all_cases %>%
       mutate(
         runid = as.integer(runid),
         in_population = n_population,
         day = iteration * serial_interval,
-        ) %>%
-      return()
+        )
+
+    if (!is.null(hosp_demand)) {
+      ret_cases <- ret_cases %>%
+        left_join(
+        tibble(iteration = hosp_demand) %>%
+          count(iteration, name = "current_hosp_i"),
+        by = "iteration"
+      )
+    } else {
+      ret_cases <- ret_cases %>%
+        mutate(current_hosp_i = 0)
+    }
+
+    if (!is.null(icu_demand)) {
+      ret_cases <- ret_cases %>%
+        left_join(
+          tibble(iteration = icu_demand) %>%
+            count(iteration, name = "current_icu_i"),
+          by = "iteration"
+        )
+    } else {
+      ret_cases <- ret_cases %>%
+        mutate(current_icu_i = 0)
+    }
+
+    ret_cases <- ret_cases %>%
+      tidyr::replace_na(list(current_hosp_i = 0,
+                      current_icu_i = 0))
+
+    return(ret_cases)
 
   } # end simulation
 

@@ -4,10 +4,9 @@
 zero_vac_sim_R5 <- simulate_covid(
   R = 5,
   n_iterations = 2,
-  run_simulations = 1,
+  run_simulations = 10,
   vaccination_levels = 0,
-  vac_transmission_reduction = 0.5,
-  n_start_infected = 5,
+  n_start_infected = 1,
   n_population = 26000,
   quiet = TRUE
   )
@@ -41,11 +40,11 @@ high_vac_sim_R5 <- simulate_covid(
 test_that("simulation returns sensible results", {
 
   # reff
-  expect_equal(max(zero_vac_sim_R5$rt_i[[2]], na.rm = TRUE), 5)
+  expect_equal(max(zero_vac_sim_R5$rt_i, na.rm = TRUE), 5)
   expect_lt(high_vac_sim_R5$rt_i[3], 2)
-  expect_equal(nrow(zero_vac_sim_R5), 2 + 1)
+  expect_equal(nrow(zero_vac_sim_R5), 30)
   expect_equal(ncol(zero_vac_sim_R5), 27)
-  expect_equal(zero_vac_sim_R5$new_cases_i[1], 5)
+  expect_equal(zero_vac_sim_R5$new_cases_i[1], 1)
 })
 
 
