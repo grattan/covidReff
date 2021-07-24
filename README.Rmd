@@ -12,20 +12,19 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 
+library(dplyr)
 devtools::load_all()
 ```
 
 # covidReff
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.tidyverse.org/lifecycle/#stable)
 <!-- badges: end -->
 
 
 The goal of `covidReff` is to simulate Covid outbreaks in a partially vaccinated
 population. 
-
-This package is in development and should not be relied upon.
 
 ## Installation
 
@@ -47,7 +46,7 @@ sim_results <- simulate_covid()
 The resulting `tibble` is:
 
 ```{r}
-sim_results
+glimpse(sim_results)
 ```
 
 The key inputs of the `simulate_covid()` function -- among many -- are the reproduction value of the virus in a 'relaxed' Australian society, `R`, and the proportion of the **whole** population that are vaccinated, `vaccination_levels`. 
@@ -74,5 +73,5 @@ sim_r4_50 <- simulate_covid(
     "81-90" = 0.95,
     "91+"   = 0.95)
   )
-sim_r4_50
+glimpse(sim_r4_50)
 ```

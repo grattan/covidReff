@@ -6,13 +6,11 @@
 <!-- badges: start -->
 
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.tidyverse.org/lifecycle/#stable)
 <!-- badges: end -->
 
 The goal of `covidReff` is to simulate Covid outbreaks in a partially
 vaccinated population.
-
-This package is in development and should not be relied upon.
 
 ## Installation
 
@@ -34,65 +32,88 @@ sim_results <- simulate_covid()
 #> Scenario 1   |   run 1
 #> 
 #> Iteration:  1  ( day  5 )            
-#>  Vaccination rate, dose 1:  52.0%
-#>  Vaccination rate, dose 2:  50.5%
-#>  Maybe infected:      42
-#>  New cases:           16 ( 38.1%  of maybe infected)
-#>  New hospitalisated:      1
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    3,039
-#>  Total second dose:   101,685
-#>  Total Pfizer:        60,849
-#>  Total AZ:            43,875
-#>  Total infected:      26  ( 0.0% of the 199,997 population)
+#>  Vaccination rate, dose 1:   51.3%
+#>  Vaccination rate, dose 2:   50.4%
+#>  Maybe infected:             33
+#>  New local cases:            24 ( 72.7%  of maybe infected)
+#>  New overseas cases:         0
+#>  New cases fully vaccinated: 9 / 38%
+#>  New Hospital / ICU:          0 / 0
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,212
+#>  Total first dose:    3,628
+#>  Total second dose:   101,204
+#>  Total Pfizer:        67,177
+#>  Total AZ:            37,655
+#>  Total infected:      34  ( 0.0% of the 199,997 population)
 #> 
 #> Iteration:  2  ( day  10 )           
-#>  Vaccination rate, dose 1:  52.4%
-#>  Vaccination rate, dose 2:  50.8%
-#>  Maybe infected:      69
-#>  New cases:           35 ( 50.7%  of maybe infected)
-#>  New hospitalisated:      2
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    3,011
-#>  Total second dose:   102,401
-#>  Total Pfizer:        61,537
-#>  Total AZ:            43,875
-#>  Total infected:      61  ( 0.0% of the 199,997 population)
+#>  Vaccination rate, dose 1:   52.4%
+#>  Vaccination rate, dose 2:   50.6%
+#>  Maybe infected:             74
+#>  New local cases:            36 ( 48.6%  of maybe infected)
+#>  New overseas cases:         5
+#>  New cases fully vaccinated: 16 / 39%
+#>  New Hospital / ICU:          6 / 3
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,196
+#>  Total first dose:    5,342
+#>  Total second dose:   101,613
+#>  Total Pfizer:        69,300
+#>  Total AZ:            37,655
+#>  Total infected:      75  ( 0.0% of the 199,997 population)
 #> 
 #> Iteration:  3  ( day  15 )           
-#>  Vaccination rate, dose 1:  52.7%
-#>  Vaccination rate, dose 2:  51.2%
-#>  Maybe infected:      150
-#>  New cases:           80 ( 53.3%  of maybe infected)
-#>  New hospitalisated:      2
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    2,953
-#>  Total second dose:   103,142
-#>  Total Pfizer:        62,220
-#>  Total AZ:            43,875
-#>  Total infected:      141  ( 0.1% of the 199,997 population)
+#>  Vaccination rate, dose 1:   53.5%
+#>  Vaccination rate, dose 2:   50.8%
+#>  Maybe infected:             130
+#>  New local cases:            65 ( 50.0%  of maybe infected)
+#>  New overseas cases:         5
+#>  New cases fully vaccinated: 20 / 29%
+#>  New Hospital / ICU:          3 / 1
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,178
+#>  Total first dose:    6,981
+#>  Total second dose:   102,016
+#>  Total Pfizer:        71,342
+#>  Total AZ:            37,655
+#>  Total infected:      145  ( 0.1% of the 199,997 population)
 ```
 
 The resulting `tibble` is:
 
 ``` r
-sim_results
-#> # A tibble: 4 x 21
-#> # Groups:   runid [1]
-#>   scenario runid iteration   day new_cases_i new_hosp_i new_dead_i
-#>   <chr>    <int>     <int> <dbl>       <dbl>      <dbl>      <dbl>
-#> 1 1            1         0     0          10          0          0
-#> 2 1            1         1     5          16          1          0
-#> 3 1            1         2    10          35          2          0
-#> 4 1            1         3    15          80          2          0
-#> # … with 14 more variables: new_vaccinated_i <dbl>, new_maybe_infected_i <int>,
-#> #   total_vaccinated1_i <int>, total_vaccinated2_i <int>, total_pf_i <int>,
-#> #   total_az_i <int>, total_cases_i <dbl>, total_hosp_i <dbl>,
-#> #   total_dead_i <dbl>, total_vaccinated_i <dbl>, in_population <int>,
-#> #   rt_i <dbl>, in_R <dbl>, in_vaccination_levels <list>
+glimpse(sim_results)
+#> Rows: 4
+#> Columns: 27
+#> Groups: runid [1]
+#> $ scenario                <chr> "1", "1", "1", "1"
+#> $ runid                   <int> 1, 1, 1, 1
+#> $ iteration               <dbl> 0, 1, 2, 3
+#> $ day                     <dbl> 0, 5, 10, 15
+#> $ new_cases_i             <dbl> 10, 24, 41, 70
+#> $ new_local_cases_i       <dbl> 10, 24, 36, 65
+#> $ new_os_cases_i          <dbl> 0, 0, 5, 5
+#> $ new_cases_vaccinated2_i <dbl> 5, 9, 16, 20
+#> $ new_dead_i              <dbl> 0, 0, 0, 0
+#> $ new_dead_vaccinated2_i  <dbl> 0, 0, 0, 0
+#> $ new_vaccinated_i        <dbl> 100781, 2212, 2196, 2178
+#> $ new_maybe_infected_i    <int> NA, 33, 74, 130
+#> $ new_hosp_i              <int> NA, 0, 6, 3
+#> $ new_icu_i               <int> NA, 0, 3, 1
+#> $ total_vaccinated1_i     <int> NA, 3628, 5342, 6981
+#> $ total_vaccinated2_i     <int> NA, 101204, 101613, 102016
+#> $ total_pf_i              <int> NA, 67177, 69300, 71342
+#> $ total_az_i              <int> NA, 37655, 37655, 37655
+#> $ total_cases_i           <dbl> 10, 34, 75, 145
+#> $ total_dead_i            <dbl> 0, 0, 0, 0
+#> $ total_vaccinated_i      <dbl> 100781, 102993, 105189, 107367
+#> $ in_population           <int> 199997, 199997, 199997, 199997
+#> $ current_hosp_i          <dbl> 0, 0, 6, 9
+#> $ current_icu_i           <dbl> 0, 0, 3, 2
+#> $ rt_i                    <dbl> NA, 2.400000, 1.500000, 1.585366
+#> $ in_R                    <dbl> 4.5, 4.5, 4.5, 4.5
+#> $ in_vaccination_levels   <list> <0.00, 0.20, 0.40, 0.50, 0.60, 0.70, 0.90, 0.9…
 ```
 
 The key inputs of the `simulate_covid()` function – among many – are the
@@ -106,46 +127,52 @@ sim_r8_50 <- simulate_covid(R = 8,
 #> Scenario 1   |   run 1
 #> 
 #> Iteration:  1  ( day  5 )            
-#>  Vaccination rate, dose 1:  51.7%
-#>  Vaccination rate, dose 2:  50.2%
-#>  Maybe infected:      76
-#>  New cases:           32 ( 42.1%  of maybe infected)
-#>  New hospitalisated:      1
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    3,052
-#>  Total second dose:   100,990
-#>  Total Pfizer:        70,828
-#>  Total AZ:            33,214
-#>  Total infected:      42  ( 0.0% of the 199,997 population)
+#>  Vaccination rate, dose 1:   50.9%
+#>  Vaccination rate, dose 2:   49.9%
+#>  Maybe infected:             56
+#>  New local cases:            37 ( 66.1%  of maybe infected)
+#>  New overseas cases:         0
+#>  New cases fully vaccinated: 10 / 27%
+#>  New Hospital / ICU:          3 / 0
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,216
+#>  Total first dose:    3,643
+#>  Total second dose:   100,258
+#>  Total Pfizer:        78,577
+#>  Total AZ:            25,324
+#>  Total infected:      47  ( 0.0% of the 199,997 population)
 #> 
 #> Iteration:  2  ( day  10 )           
-#>  Vaccination rate, dose 1:  52.0%
-#>  Vaccination rate, dose 2:  50.5%
-#>  Maybe infected:      252
-#>  New cases:           130 ( 51.6%  of maybe infected)
-#>  New hospitalisated:      18
-#>  New dead:                1
-#>  New vaccinated:      714
-#>  Total first dose:    3,000
-#>  Total second dose:   101,724
-#>  Total Pfizer:        71,510
-#>  Total AZ:            33,214
-#>  Total infected:      172  ( 0.1% of the 199,997 population)
+#>  Vaccination rate, dose 1:   52.0%
+#>  Vaccination rate, dose 2:   50.1%
+#>  Maybe infected:             223
+#>  New local cases:            111 ( 49.8%  of maybe infected)
+#>  New overseas cases:         5
+#>  New cases fully vaccinated: 21 / 18%
+#>  New Hospital / ICU:          14 / 4
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,201
+#>  Total first dose:    5,369
+#>  Total second dose:   100,654
+#>  Total Pfizer:        80,699
+#>  Total AZ:            25,324
+#>  Total infected:      163  ( 0.1% of the 199,997 population)
 #> 
 #> Iteration:  3  ( day  15 )           
-#>  Vaccination rate, dose 1:  52.4%
-#>  Vaccination rate, dose 2:  50.9%
-#>  Maybe infected:      996
-#>  New cases:           538 ( 54.0%  of maybe infected)
-#>  New hospitalisated:      56
-#>  New dead:                2
-#>  New vaccinated:      714
-#>  Total first dose:    2,963
-#>  Total second dose:   102,454
-#>  Total Pfizer:        72,203
-#>  Total AZ:            33,214
-#>  Total infected:      710  ( 0.4% of the 199,997 population)
+#>  Vaccination rate, dose 1:   53.0%
+#>  Vaccination rate, dose 2:   50.3%
+#>  Maybe infected:             784
+#>  New local cases:            394 ( 50.3%  of maybe infected)
+#>  New overseas cases:         5
+#>  New cases fully vaccinated: 65 / 16%
+#>  New Hospital / ICU:          43 / 7
+#>  New dead:                    3       0%  were fully vaccinated
+#>  New vaccinated:      2,183
+#>  Total first dose:    7,011
+#>  Total second dose:   101,048
+#>  Total Pfizer:        82,735
+#>  Total AZ:            25,324
+#>  Total infected:      562  ( 0.3% of the 199,997 population)
 ```
 
 The `vaccination_levels` is provided as either a single numeric for
@@ -171,58 +198,81 @@ sim_r4_50 <- simulate_covid(
 #> Scenario 1   |   run 1
 #> 
 #> Iteration:  1  ( day  5 )            
-#>  Vaccination rate, dose 1:  58.5%
-#>  Vaccination rate, dose 2:  57.0%
-#>  Maybe infected:      38
-#>  New cases:           18 ( 47.4%  of maybe infected)
-#>  New hospitalisated:      0
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    2,977
-#>  Total second dose:   114,803
-#>  Total Pfizer:        71,295
-#>  Total AZ:            46,485
-#>  Total infected:      28  ( 0.0% of the 199,997 population)
+#>  Vaccination rate, dose 1:   58.0%
+#>  Vaccination rate, dose 2:   57.1%
+#>  Maybe infected:             21
+#>  New local cases:            14 ( 66.7%  of maybe infected)
+#>  New overseas cases:         0
+#>  New cases fully vaccinated: 7 / 50%
+#>  New Hospital / ICU:          0 / 0
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,075
+#>  Total first dose:    3,426
+#>  Total second dose:   114,549
+#>  Total Pfizer:        78,998
+#>  Total AZ:            38,977
+#>  Total infected:      24  ( 0.0% of the 199,997 population)
 #> 
 #> Iteration:  2  ( day  10 )           
-#>  Vaccination rate, dose 1:  58.9%
-#>  Vaccination rate, dose 2:  57.4%
-#>  Maybe infected:      72
-#>  New cases:           35 ( 48.6%  of maybe infected)
-#>  New hospitalisated:      0
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    2,960
-#>  Total second dose:   115,495
-#>  Total Pfizer:        71,970
-#>  Total AZ:            46,485
-#>  Total infected:      63  ( 0.0% of the 199,997 population)
+#>  Vaccination rate, dose 1:   59.0%
+#>  Vaccination rate, dose 2:   57.3%
+#>  Maybe infected:             37
+#>  New local cases:            18 ( 48.6%  of maybe infected)
+#>  New overseas cases:         5
+#>  New cases fully vaccinated: 10 / 43%
+#>  New Hospital / ICU:          0 / 1
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,046
+#>  Total first dose:    4,967
+#>  Total second dose:   114,967
+#>  Total Pfizer:        80,957
+#>  Total AZ:            38,977
+#>  Total infected:      47  ( 0.0% of the 199,997 population)
 #> 
 #> Iteration:  3  ( day  15 )           
-#>  Vaccination rate, dose 1:  59.2%
-#>  Vaccination rate, dose 2:  57.7%
-#>  Maybe infected:      138
-#>  New cases:           68 ( 49.3%  of maybe infected)
-#>  New hospitalisated:      3
-#>  New dead:                0
-#>  New vaccinated:      714
-#>  Total first dose:    2,912
-#>  Total second dose:   116,211
-#>  Total Pfizer:        72,638
-#>  Total AZ:            46,485
-#>  Total infected:      131  ( 0.1% of the 199,997 population)
-sim_r4_50
-#> # A tibble: 4 x 21
-#> # Groups:   runid [1]
-#>   scenario runid iteration   day new_cases_i new_hosp_i new_dead_i
-#>   <chr>    <int>     <int> <dbl>       <dbl>      <dbl>      <dbl>
-#> 1 1            1         0     0          10          0          0
-#> 2 1            1         1     5          18          0          0
-#> 3 1            1         2    10          35          0          0
-#> 4 1            1         3    15          68          3          0
-#> # … with 14 more variables: new_vaccinated_i <dbl>, new_maybe_infected_i <int>,
-#> #   total_vaccinated1_i <int>, total_vaccinated2_i <int>, total_pf_i <int>,
-#> #   total_az_i <int>, total_cases_i <dbl>, total_hosp_i <dbl>,
-#> #   total_dead_i <dbl>, total_vaccinated_i <dbl>, in_population <int>,
-#> #   rt_i <dbl>, in_R <dbl>, in_vaccination_levels <list>
+#>  Vaccination rate, dose 1:   60.0%
+#>  Vaccination rate, dose 2:   57.5%
+#>  Maybe infected:             59
+#>  New local cases:            27 ( 45.8%  of maybe infected)
+#>  New overseas cases:         5
+#>  New cases fully vaccinated: 11 / 34%
+#>  New Hospital / ICU:          6 / 0
+#>  New dead:                    0       NA  were fully vaccinated
+#>  New vaccinated:      2,014
+#>  Total first dose:    6,478
+#>  Total second dose:   115,336
+#>  Total Pfizer:        82,837
+#>  Total AZ:            38,977
+#>  Total infected:      79  ( 0.0% of the 199,997 population)
+glimpse(sim_r4_50)
+#> Rows: 4
+#> Columns: 27
+#> Groups: runid [1]
+#> $ scenario                <chr> "1", "1", "1", "1"
+#> $ runid                   <int> 1, 1, 1, 1
+#> $ iteration               <dbl> 0, 1, 2, 3
+#> $ day                     <dbl> 0, 5, 10, 15
+#> $ new_cases_i             <dbl> 10, 14, 23, 32
+#> $ new_local_cases_i       <dbl> 10, 14, 18, 27
+#> $ new_os_cases_i          <dbl> 0, 0, 5, 5
+#> $ new_cases_vaccinated2_i <dbl> 6, 7, 10, 11
+#> $ new_dead_i              <dbl> 0, 0, 0, 0
+#> $ new_dead_vaccinated2_i  <dbl> 0, 0, 0, 0
+#> $ new_vaccinated_i        <dbl> 114172, 2075, 2046, 2014
+#> $ new_maybe_infected_i    <int> NA, 21, 37, 59
+#> $ new_hosp_i              <int> NA, 0, 0, 6
+#> $ new_icu_i               <int> NA, 0, 1, 0
+#> $ total_vaccinated1_i     <int> NA, 3426, 4967, 6478
+#> $ total_vaccinated2_i     <int> NA, 114549, 114967, 115336
+#> $ total_pf_i              <int> NA, 78998, 80957, 82837
+#> $ total_az_i              <int> NA, 38977, 38977, 38977
+#> $ total_cases_i           <dbl> 10, 24, 47, 79
+#> $ total_dead_i            <dbl> 0, 0, 0, 0
+#> $ total_vaccinated_i      <dbl> 114172, 116247, 118293, 120307
+#> $ in_population           <int> 199997, 199997, 199997, 199997
+#> $ current_hosp_i          <dbl> 0, 0, 0, 6
+#> $ current_icu_i           <dbl> 0, 0, 0, 0
+#> $ rt_i                    <dbl> NA, 1.400000, 1.285714, 1.173913
+#> $ in_R                    <dbl> 4, 4, 4, 4
+#> $ in_vaccination_levels   <list> <0.00, 0.40, 0.60, 0.60, 0.60, 0.70, 0.90, 0.9…
 ```
