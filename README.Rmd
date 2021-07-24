@@ -20,6 +20,7 @@ devtools::load_all()
 
 <!-- badges: start -->
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://www.tidyverse.org/lifecycle/#stable)
+[![R build status](https://github.com/grattan/covidReff/workflows/R-CMD-check/badge.svg)](https://github.com/grattan/covidReff/actions)
 <!-- badges: end -->
 
 
