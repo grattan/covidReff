@@ -87,7 +87,7 @@ test_that("hospital and death probabilities are as expected", {
                0.027 * (1 - az_2_poh) / (1 - az_2_poi))
 
   expect_lt(get_covid_death(90, .vaccine = "az", .dose = 2, .treatment_improvement = 0.2),
-            0.006)
+            0.0068)
 
   expect_lt(get_covid_death(90, .vaccine = "pf", .dose = 2),
             get_covid_death(90, .vaccine = "pf", .dose = 1))
