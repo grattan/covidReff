@@ -368,7 +368,7 @@ simulate_covid <- function(
 
       # Daily summary stats
       new_cases <- newly[, .N]
-      if (t == 1) new_os_cases <- 0
+      if (t == 1) new_os_cases <- 0 # add this note
       if (t != 1) new_os_cases <- n_iteration_introductions
       new_local_cases <- new_cases - new_os_cases
       new_hosp <- newly[, sum(is_hosp)]
