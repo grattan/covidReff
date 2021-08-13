@@ -43,7 +43,7 @@ test_that("simulation returns sensible results", {
   expect_equal(max(zero_vac_sim_R5$rt_i, na.rm = TRUE), 5)
   expect_lt(high_vac_sim_R5$rt_i[3], 2)
   expect_equal(nrow(zero_vac_sim_R5), 30)
-  expect_equal(ncol(zero_vac_sim_R5), 27)
+  expect_equal(ncol(zero_vac_sim_R5), 28)
   expect_equal(zero_vac_sim_R5$new_cases_i[1], 1)
 })
 

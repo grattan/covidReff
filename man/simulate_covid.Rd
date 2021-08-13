@@ -6,6 +6,8 @@
 \arguments{
 \item{R}{The average number of additional people an infected person will infect in an unvaccinated society. It incorporates both the R0 of the variant and behaviours and policies may reduce alter transmission. A single numeric with default 4.5 to represent the Delta variant in a low-restriction society. See \href{https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf}{Kucharski et al (2021)}.}
 
+\item{R_dist}{The distribution of the R value, each with mean equal to R. One of: "constant" (the default); "rpois" (\code{rpois(n, R)}) ; "lnorm" (\code{rlnorm(n, .05, .3)}); or "beta" (\code{rbeta(n, 0.25, 3)}).}
+
 \item{serial_interval}{The average number of days between a person becoming infected and infecting others. A single numeric with default of 5, appropriate for wild type/Delta variant: \href{https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}{Pung et al (2021)}).
 A shorter \code{serial_interval} will speed up the virus spread over time.}
 
@@ -31,9 +33,9 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{n_population}{Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).}
 
-\item{n_start_infected}{The number of people infected at the beginning of the simulation. A numeric defaulting to 100 people infected at day 0.}
+\item{n_start_infected}{An integer for the number of people infected at the beginning of the simulation. An integer defaulting to 100L people infected at day 0.}
 
-\item{n_daily_introductions}{The number of new external infections introduced each day. A numeric defaulting to 1.}
+\item{n_daily_introductions}{An integer for the number of new external infections introduced each day. An integer defaulting to 1L.}
 
 \item{n_iterations}{Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.}
 

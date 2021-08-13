@@ -1,8 +1,8 @@
 Package: covidReff
 Type: Package
 Title: Simulate Covid
-Version: 0.1.4
-Date: 2021-07-23
+Version: 0.1.5
+Date: 2021-08-13
 Authors@R: c(person("Will", "Mackey", email = "wfmackey@gmail.com",
                 role = c("aut", "cre")),
         person(given = "Hugh", family = "Parsonage",
@@ -22,7 +22,8 @@ Imports:
     magrittr,
     tibble,
     scales,
-    crayon
+    crayon,
+    hutilscpp
 Suggests: 
     testthat,
     knitr,
