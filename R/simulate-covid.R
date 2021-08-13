@@ -72,6 +72,10 @@ good <- green
 note <- cyan
 notebold <- bgCyan$white$bold
 
+# set data.table options
+options(datatable.auto.index = FALSE)
+options(datatable.use.index = FALSE)
+
 
 simulate_covid <- function(
   R = 4.5,
