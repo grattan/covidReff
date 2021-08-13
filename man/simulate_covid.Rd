@@ -33,9 +33,9 @@ A shorter \code{serial_interval} will speed up the virus spread over time.}
 
 \item{n_population}{Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).}
 
-\item{n_start_infected}{An integer for the number of people infected at the beginning of the simulation. A numeric defaulting to 100 people infected at day 0.}
+\item{n_start_infected}{An integer for the number of people infected at the beginning of the simulation. An integer defaulting to 100L people infected at day 0.}
 
-\item{n_daily_introductions}{An integer for the number of new external infections introduced each day. A numeric defaulting to 1.}
+\item{n_daily_introductions}{An integer for the number of new external infections introduced each day. An integer defaulting to 1L.}
 
 \item{n_iterations}{Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.}
 

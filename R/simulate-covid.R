@@ -21,8 +21,8 @@
 #' @param death_rate The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
 #' @param treatment_death_reduction The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.
 #' @param n_population Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).
-#' @param n_start_infected An integer for the number of people infected at the beginning of the simulation. A numeric defaulting to 100 people infected at day 0.
-#' @param n_daily_introductions An integer for the number of new external infections introduced each day. A numeric defaulting to 1.
+#' @param n_start_infected An integer for the number of people infected at the beginning of the simulation. An integer defaulting to 100L people infected at day 0.
+#' @param n_daily_introductions An integer for the number of new external infections introduced each day. An integer defaulting to 1L.
 #' @param n_iterations Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.
 #' @param run_simulations The number of times the simulation is run. A single integer defaulting to  1L.
 #' @param scenario Name of the scenario. Defaults to "1". This is useful when using \code{purrr::map} or \code{lapply} over a number of scenarios.
