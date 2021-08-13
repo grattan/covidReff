@@ -22,7 +22,8 @@ Imports:
     magrittr,
     tibble,
     scales,
-    crayon
+    crayon,
+    hutilscpp
 Suggests: 
     testthat,
     knitr,

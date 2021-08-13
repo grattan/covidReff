@@ -328,10 +328,12 @@ simulate_covid <- function(
 
       # INFECTIONS ----------------------------------------------------------------
       # how many newly infected in the community last iteration:
-      n_infected_and_vaccinated_adults   <- aus[, sum(newly_infected & vaccine_dose >= 1L & age >= 18)]
-      n_infected_and_vaccinated_kids     <- aus[, sum(newly_infected & vaccine_dose >= 1L & age  < 18)]
-      n_infected_and_unvaccinated_adults <- aus[, sum(newly_infected & vaccine_dose <  1L & age >= 18)]
-      n_infected_and_unvaccinated_kids   <- aus[, sum(newly_infected & vaccine_dose <  1L & age  < 18)]
+
+      n_infected_and_vaccinated_adults   <- aus[, hutilscpp::sum_and3s(newly_infected, vaccine_dose >= 1L, age >= 18)]
+      n_infected_and_vaccinated_kids     <- aus[, hutilscpp::sum_and3s(newly_infected, vaccine_dose >= 1L, age  < 18)]
+      n_infected_and_unvaccinated_adults <- aus[, hutilscpp::sum_and3s(newly_infected, vaccine_dose <  1L, age >= 18)]
+      n_infected_and_unvaccinated_kids   <- aus[, hutilscpp::sum_and3s(newly_infected, vaccine_dose <  1L, age  < 18)]
+
 
       # n_maybe_infected is the number of infected due to R and
       # differing rates of infection-spread among vacc/not vacc,
@@ -415,8 +417,8 @@ simulate_covid <- function(
       new_hosp <- newly[, sum(is_hosp)]
       new_icu <- newly[, sum(is_icu)]
       new_dead <- newly[, sum(is_dead)]
-      new_dead_vac <- newly[vaccine_dose == 2L, sum(is_dead)]
-      new_cases_vac <- newly[vaccine_dose == 2L, .N]
+      new_dead_vac <- newly[, hutilscpp::sum_and3s(vaccine_dose == 2L, is_dead)]
+      new_cases_vac <- newly[, sum(vaccine_dose == 2L)]
       new_vaccinated <- aus[, sum(new_first_dose)]
       total_vaccinated1 <- aus[vaccine_dose == 1L, .N]
       total_vaccinated2 <- aus[vaccine_dose == 2L, .N]

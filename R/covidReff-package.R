@@ -28,6 +28,7 @@
 #' @importFrom stats rlnorm
 #' @importFrom stats rpois
 #' @importFrom stats rbeta
+#' @importFrom hutilscpp sum_and3s
 
 #' @import crayon
 
