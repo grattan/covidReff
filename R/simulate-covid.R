@@ -7,21 +7,22 @@
 #' vaccinations in a population, and other epidemiological params.
 #'
 #' @param R The average number of additional people an infected person will infect in an unvaccinated society. It incorporates both the R0 of the variant and behaviours and policies may reduce alter transmission. A single numeric with default 4.5 to represent the Delta variant in a low-restriction society. See \href{https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/993232/S1272_LSHTM_Modelling_Paper_B.1.617.2.pdf}{Kucharski et al (2021)}.
+#' @param R_dist The distribution of the R value, each with mean equal to R. One of: "constant" (the default); "rpois" (\code{rpois(n, R)}) ; "lnorm" (\code{rlnorm(n, .05, .3)}); or "beta" (\code{rbeta(n, 0.25, 3)}).
 #' @param serial_interval The average number of days between a person becoming infected and infecting others. A single numeric with default of 5, appropriate for wild type/Delta variant: \href{https://www.medrxiv.org/content/10.1101/2021.06.04.21258205v1.full.pdf}{Pung et al (2021)}).
 #' A shorter \code{serial_interval} will speed up the virus spread over time.
 #' @param vaccination_levels Starting vaccination levels. Either a single numeric for a uniformly distributed population wide vaccination rate, or a named vector of length 10 representing the vaccination levels for age groups 0-10, 11-20, 21-30, ..., 91-100. Default is \code{vaccination_levels = c(0, 0, 0, 0.5, 0.6, 0.9, 0.9, 0.9, 0.9, 0.9)}
 #' @param vaccination_growth_steepness Defines how quickly additional people are vaccinated after opening, defaulting to 0.01. This is the growth parameter (\code{c}) in the logistic curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
-#' @param p_max_vaccinated  Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logistic curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
+#' @param p_max_vaccinated Maximum proportion of the population able to be vaccinated. A single numeric with default 0.90. This is the maximium level parameter (\code{M}) in the logistic curve \code{M / (1 + ((M - n0) / n0) * exp(-c*t))}, where \code{n0} is the starting vaccination level defined by  \code{vaccination_levels}.
 #' @param only_pfizer_after_opening When the simulation starts, do newly vaccinated people only get \code{TRUE} the Pfizer vaccine (the defult), or a mix of
-#' @param over60_az_share   The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
-#' @param under60_az_share  The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.10. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
+#' @param over60_az_share The proportion of vaccinated people over 60 years old who have the AstraZeneca vaccine. Single numeric defaulting to 0.80. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
+#' @param under60_az_share The proportion of vaccinated people 60-years-old and younger who have the AstraZeneca vaccine. Single numeric defaulting to 0.10. Used for vaccine distribution before the simulation starts and, when \code{only_pfizer_after_opening = FALSE}, for new vaccines during the simulation.
 #' @param kids_R_reduction The proportion reduction in transmission of children under the age of 18 defaulting to 0.3.
 #' @param vac_transmission_reduction The reduction in the likelihood of transmission from an infected vaccinated person relative to an infected unvaccinated person. A single numeric with default 0.5, representing a 50 per cent reduction in transmission from vaccinated infection people.
 #' @param death_rate The likelihood that an infected unvaccinated person dies by age. Either a character "loglinear", the default, which uses the log-linear relationship between age and mortality of \code{10^(-3.27 + 0.0524 * age) / 100} described in \href{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7721859/}{Levin et al (2021)} and capped at 0.28. Alternatively, the user can provide a numeric vector of length 10 describing the death rates for age groups 0-10, 11-20, 21-30, ..., 91-100.
 #' @param treatment_death_reduction The reduction in mortality from treatments. A single numeric with default 0.2 that proportionally reduces \code{death_rate} values. E.g. with \code{treatment_death_reduction = 0.2}, a person with a 10 per cent pre-treatment risk of dying from Covid would have an 8 per cent risk with treatment.
 #' @param n_population Population size for each simulation. A single numeric defaulting to 2.6e6 (about 10 per cent of the Australian population).
-#' @param n_start_infected The number of people infected at the beginning of the simulation. A numeric defaulting to 100 people infected at day 0.
-#' @param n_daily_introductions The number of new external infections introduced each day. A numeric defaulting to 1.
+#' @param n_start_infected An integer for the number of people infected at the beginning of the simulation. A numeric defaulting to 100 people infected at day 0.
+#' @param n_daily_introductions An integer for the number of new external infections introduced each day. A numeric defaulting to 1.
 #' @param n_iterations Number of iterations the simulation runs for. A single integer defaulting to 3L. Means that the simulation runs for \code{serial_interval * n_iterations} days.
 #' @param run_simulations The number of times the simulation is run. A single integer defaulting to  1L.
 #' @param scenario Name of the scenario. Defaults to "1". This is useful when using \code{purrr::map} or \code{lapply} over a number of scenarios.
@@ -74,6 +75,7 @@ notebold <- bgCyan$white$bold
 
 simulate_covid <- function(
   R = 4.5,
+  R_dist = "constant",
   serial_interval = 5,
   vaccination_levels = c(
     "0-10"  = 0.00,
@@ -96,16 +98,51 @@ simulate_covid <- function(
   death_rate = "loglinear",
   treatment_death_reduction = 0.2,
   n_population = 2e5,
-  n_start_infected = 10,
-  n_daily_introductions = 1,
+  n_start_infected = 10L,
+  n_daily_introductions = 1L,
   n_iterations =  3,
   run_simulations = 1,
   scenario = "1",
-  quiet = n_population < 100e3
+  quiet = n_population < 1e6
 ) {
 
+  # settings and checks
   quiet <- isTRUE(quiet)
+
+  if (n_start_infected %% 1 != 0) stop("n_start_infected = ", n_start_infected, " is not a whole number")
+  if (n_daily_introductions %% 1 != 0) stop("n_daily_introductions = ", n_daily_introductions, " is not a whole number")
+
   vac_transmission_rate <- 1 - vac_transmission_reduction
+
+  # generate contact set distributions
+  if (R_dist == "constant" | is.null(R_dist)) {
+
+    contacts_set <- rep(R, 1e5)
+
+  } else if (R_dist == "pois") {
+
+    contacts_set <- rpois(1e5, R)
+
+  } else if (R_dist == "lnorm") {
+
+    contacts_set <- rlnorm(1e5, .05, .3)
+    contacts_set <- contacts_set * (R / mean(contacts_set))
+    contacts_set <- round(contacts_set)
+
+  } else if (R_dist == "beta") {
+
+    contacts_set <- rbeta(1e5, .25, 3)
+    contacts_set <- contacts_set * (R / mean(contacts_set))
+    contacts_set <- round(contacts_set)
+
+  }
+
+  if (round(mean(contacts_set), 1) != R) {
+    stop("The contacts-set generation was a bit off. The expected mean was ",
+            "R = ", R, ", but the mean of the generated ", R_dist,
+            " distribution was ", round(mean(contacts_set), 1), ".",
+         "Sorry this happens sometimes -- try again!")
+  }
 
   # get Australia population
   base_aus <- .read_demographics(uncounted = TRUE,
@@ -151,10 +188,8 @@ simulate_covid <- function(
 
     # first dose some of the population with Pfizer
     # set days_since_first_dose:
-    aus[is_vaccinated == TRUE,
-        days_since_first_dose := 1000] %>%
-      .[is_vaccinated == FALSE,
-        days_since_first_dose := 0] %>%
+    aus[,
+        days_since_first_dose := fifelse(is_vaccinated == TRUE, 1000, 0)] %>%
     # some start with first dose:
       .[is_vaccinated == FALSE,
         start_first_dose := .sample_fixed_TRUE(.N, n_start_pf_first)] %>%
@@ -162,14 +197,14 @@ simulate_covid <- function(
         vaccine_dose := 1L]
 
     # set vaccine types:
-      if (only_pfizer_after_opening) {
-        aus[start_first_dose == TRUE,
-            vaccine_type := factor("pf", vaccine_names)]
-      } else {
-        aus[start_first_dose == TRUE,
-            vaccine_type := .get_vaccination_type(age,
-                                                  over60az = over60_az_share,
-                                                  under60az = under60_az_share)]
+    if (only_pfizer_after_opening) {
+      aus[start_first_dose == TRUE,
+          vaccine_type := factor("pf", vaccine_names)]
+    } else {
+      aus[start_first_dose == TRUE,
+          vaccine_type := .get_vaccination_type(age,
+                                                over60az = over60_az_share,
+                                                under60az = under60_az_share)]
       }
 
     # set
@@ -302,17 +337,19 @@ simulate_covid <- function(
       #  but not whether the person
       #  they cough on is endowed with greater protection
       #  from infection because they are vaccinated)
-      n_maybe_infected <- n_infected_and_vaccinated_adults * R * vac_transmission_rate +
-                          n_infected_and_vaccinated_kids * R * (1 - kids_R_reduction) * vac_transmission_rate +
-                          n_infected_and_unvaccinated_adults * R +
-                          n_infected_and_unvaccinated_kids * (1 - kids_R_reduction) * R
+
+      # how many contacts will depend on a draw from the distribution
+      sample_sum_contacts <- function(N) {
+        sum(sample(contacts_set, N, TRUE))
+      }
+
+      n_maybe_infected <- sample_sum_contacts(n_infected_and_vaccinated_adults)   * vac_transmission_rate +
+                          sample_sum_contacts(n_infected_and_vaccinated_kids)     * vac_transmission_rate * (1 - kids_R_reduction) +
+                          sample_sum_contacts(n_infected_and_unvaccinated_adults) +
+                          sample_sum_contacts(n_infected_and_unvaccinated_kids)   * (1 - kids_R_reduction)
 
       n_maybe_infected <- as.integer(n_maybe_infected)
 
-      if (n_maybe_infected == 0) {
-        zero_count <- zero_count + 1
-        if (zero_count == 3) break else next
-      }
 
       # reset maybe infected and newly infected
       aus[, maybe_infected := FALSE] %>%
@@ -525,6 +562,7 @@ simulate_covid <- function(
            scenario = scenario) %>%
     relocate(scenario, runid, iteration, day, starts_with("new"), starts_with("total")) %>%
     mutate(in_R = R,
+           in_R_dist = R_dist,
            in_vaccination_levels = list(vaccination_levels))
 
     return(iterations)

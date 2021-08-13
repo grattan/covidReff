@@ -26,6 +26,9 @@
 #' @importFrom stats weighted.mean
 #' @importFrom stats runif
 #' @importFrom stats rlnorm
+#' @importFrom stats rpois
+#' @importFrom stats rbeta
+
 #' @import crayon
 
 
