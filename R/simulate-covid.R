@@ -139,6 +139,8 @@ simulate_covid <- function(
     contacts_set <- contacts_set * (R / mean(contacts_set))
     contacts_set <- round(contacts_set)
 
+  } else {
+    stop("R_dist must be one of 'constant', 'pois', 'lnorm', or 'beta'")
   }
 
   if (round(mean(contacts_set), 1) != R) {
