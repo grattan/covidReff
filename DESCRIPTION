@@ -1,8 +1,8 @@
 Package: covidReff
 Type: Package
 Title: Simulate Covid
-Version: 0.1.5
-Date: 2021-08-13
+Version: 0.1.6
+Date: 2021-09-08
 Authors@R: c(person("Will", "Mackey", email = "wfmackey@gmail.com",
                 role = c("aut", "cre")),
         person(given = "Hugh", family = "Parsonage",
@@ -29,6 +29,7 @@ Suggests:
     knitr,
     rmarkdown,
     stats,
+    microbenchmark,
     withr
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr

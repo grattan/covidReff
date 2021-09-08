@@ -1,0 +1,59 @@
+﻿Type,Manufacturer,Dose,Days,Efficacy,Source
+Infection,Pfizer,1,0,0,Starting
+Infection,Pfizer,1,21,57,Oxford-Pouwels
+Infection,Pfizer,1,84,57,Oxford-Pouwels
+Infection,Pfizer,2,0,57,Oxford-Pouwels
+Infection,Pfizer,2,7,82,Oxford-Pouwels
+Infection,Pfizer,2,14,93,Oxford-Pouwels
+Infection,Pfizer,2,44,89,Oxford-Pouwels
+Infection,Pfizer,2,75,83,Oxford-Pouwels
+Infection,Pfizer,2,105,71,Oxford-Pouwels
+Infection,Pfizer,2,136,59,Kaiser
+Infection,Pfizer,2,166,53,Kaiser
+Infection,Pfizer,2,197,47,Kaiser + Extrap
+Infection,Pfizer,2,227,41,Kaiser + Extrap
+Infection,Pfizer,2,257,35,Kaiser + Extrap
+Infection,Pfizer,2,288,29,Kaiser + Extrap
+Hospitalization,Pfizer,1,0,0,Starting
+Hospitalization,Pfizer,1,14,78,Ontario
+Hospitalization,Pfizer,1,42,78,Ontario
+Hospitalization,Pfizer,2,0,78,Ontario
+Hospitalization,Pfizer,2,14,87,Kaiser
+Hospitalization,Pfizer,2,44,87,Kaiser
+Hospitalization,Pfizer,2,75,87,Kaiser
+Hospitalization,Pfizer,2,105,87,Kaiser
+Hospitalization,Pfizer,2,136,88,Kaiser
+Hospitalization,Pfizer,2,166,88,Kaiser
+Hospitalization,Pfizer,2,197,88,Kaiser + Extrap
+Hospitalization,Pfizer,2,227,88,Kaiser + Extrap
+Hospitalization,Pfizer,2,257,88,Kaiser + Extrap
+Hospitalization,Pfizer,2,288,88,Kaiser + Extrap
+Infection,AZ,1,0,0,Starting
+Infection,AZ,1,21,46,Oxford-Pouwels
+Infection,AZ,1,84,46,Oxford-Pouwels
+Infection,AZ,2,0,46,Oxford-Pouwels
+Infection,AZ,2,7,71,Oxford-Pouwels
+Infection,AZ,2,14,72,Oxford-Pouwels
+Infection,AZ,2,44,69,Oxford-Pouwels
+Infection,AZ,2,75,65,Oxford-Pouwels
+Infection,AZ,2,105,61,Oxford-Pouwels
+Infection,AZ,2,136,57,Oxford + Extrap
+Infection,AZ,2,166,53,Oxford + Extrap
+Infection,AZ,2,197,49,Oxford + Extrap
+Infection,AZ,2,227,45,Oxford + Extrap
+Infection,AZ,2,257,41,Oxford + Extrap
+Infection,AZ,2,288,37,Oxford + Extrap
+Hospitalization,AZ,1,0,0,Starting
+Hospitalization,AZ,1,14,71,Bernal-PHE
+Hospitalization,AZ,1,42,71,Bernal-PHE
+Hospitalization,AZ,2,0,71,Bernal-PHE
+Hospitalization,AZ,2,14,92,Bernal-PHE
+Hospitalization,AZ,2,44,92,Bernal-PHE
+Hospitalization,AZ,2,75,92,Bernal-PHE
+Hospitalization,AZ,2,105,92,Bernal-PHE
+Hospitalization,AZ,2,136,92,Bernal-PHE
+Hospitalization,AZ,2,166,92,Bernal-PHE
+Hospitalization,AZ,2,197,92,Bernal-PHE
+Hospitalization,AZ,2,227,92,Bernal-PHE
+Hospitalization,AZ,2,257,92,Bernal-PHE
+Hospitalization,AZ,2,288,92,Bernal-PHE

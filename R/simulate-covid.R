@@ -145,8 +145,8 @@ simulate_covid <- function(
 
   if (round(mean(contacts_set), 1) != R) {
     stop("The contacts-set generation was a bit off. The expected mean was ",
-            "R = ", R, ", but the mean of the generated ", R_dist,
-            " distribution was ", round(mean(contacts_set), 1), ".",
+         "R = ", R, ", but the mean of the generated ", R_dist,
+         " distribution was ", round(mean(contacts_set), 1), ".",
          "Sorry this happens sometimes -- try again!")
   }
 
@@ -194,7 +194,7 @@ simulate_covid <- function(
 
     # first dose some of the population with Pfizer
     # set days_since_first_dose:
-    aus[,
+    aus[,                                 # days since needs to be appropriate here
         days_since_first_dose := fifelse(is_vaccinated == TRUE, 1000, 0)] %>%
     # some start with first dose:
       .[is_vaccinated == FALSE,

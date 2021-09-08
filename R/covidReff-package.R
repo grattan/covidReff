@@ -18,6 +18,7 @@
 #' @importFrom dqrng dqrunif
 #' @importFrom magrittr %>%
 #' @importFrom purrr map_dfr
+#' @importFrom purrr pmap_dbl
 #' @importFrom tibble tibble
 #' @importFrom tidyr uncount
 #' @importFrom tidyr replace_na
