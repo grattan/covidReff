@@ -62,7 +62,7 @@ test_that("retrieval of vaccine effectiveness isn't TOO damn slow", {
     times = 5
   )
 
-  # should be quicker than 4 seconds
-  expect_lte(mean(speed_test$time/1e9), 4)
+  # should be quicker than 5 seconds
+  expect_lte(mean(speed_test$time/1e9), 5)
 
 })

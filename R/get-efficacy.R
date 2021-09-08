@@ -22,16 +22,16 @@ get_vaccine_efficacy <- function(protection_against,
 
     if (po == "poi") {
       if (vt == "pf") {
-        if (vd == 1) return(ved_list$ved_poi_pf1[day]) else return(ved_list$ved_poi_pf2[day])
+        if (vd == 1) return(covidReff::ved_list$ved_poi_pf1[day]) else return(covidReff::ved_list$ved_poi_pf2[day])
       } else {
-        if (vd == 1) return(ved_list$ved_poi_az1[day]) else return(ved_list$ved_poi_az2[day])
+        if (vd == 1) return(covidReff::ved_list$ved_poi_az1[day]) else return(covidReff::ved_list$ved_poi_az2[day])
       }
 
     } else {
       if (vt == "pf") {
-        if (vd == 1) return(ved_list$ved_poh_pf1[day]) else return(ved_list$ved_poh_pf2[day])
+        if (vd == 1) return(covidReff::ved_list$ved_poh_pf1[day]) else return(covidReff::ved_list$ved_poh_pf2[day])
       } else {
-        if (vd == 1) return(ved_list$ved_poh_az1[day]) else return(ved_list$ved_poh_az2[day])
+        if (vd == 1) return(covidReff::ved_list$ved_poh_az1[day]) else return(covidReff::ved_list$ved_poh_az2[day])
       }
     }
   }
